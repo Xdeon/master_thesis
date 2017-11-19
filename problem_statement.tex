@@ -10,19 +10,19 @@ Since scalability and reliability are the desired goals. They are specified in t
 
 \begin{enumerate}
 
-\item Scalability can refer to vertical scalability and horizontal scalability. It is particularly interesting to evaluate horizontal scalability in IoT scenarios, especially when Erlang comes into play, since it is also famous for its transparent distribution support. However, horizontal scalability is also heavily determined by application specific requirements, which makes it difficult to model and test generally. Therefore, for simplicity, only vertical scalability is considered in this work. It is simply measured by how many concurrent requests a system can handle on average under certain load. Thus concurrency and scalability are used interchangeably in this work.
+\item Scalability can refer to vertical scalability and horizontal scalability. It is particularly interesting to evaluate horizontal scalability in IoT scenarios, especially when Erlang comes into play, since it is also famous for its transparent distribution support. However, horizontal scalability is also heavily determined by application specific requirements, which makes it difficult to model and test generally. Therefore, for simplicity, only vertical scalability is considered in this work. It is measured by how many concurrent requests a system can handle on average under certain load. Thus concurrency and scalability are used interchangeably in this work.
 
-\item Reliability can refer to many things. In this work, availability is more a research interest. It is measured by observing whether a system behaves as expected when random faults happen, thus ``available''. This is sometimes also referred as fault-tolerance. Fault-tolerance and reliability are used interchangeably in this work.
+\item Reliability can refer to many things. In this work, availability is more a research interest. It is measured by observing whether a system behaves as expected when random faults happen within any of its subsystems, so that the whole system remains available. This is sometimes also referred as fault-tolerance. Fault-tolerance and reliability are used interchangeably in this work.
 
 \end{enumerate}
 
-As a summary, in a client-server model, a scalable and reliable server means it must be stable facing large number of concurrent clients and behave as expected when faults occur.
+As a summary, in a client-server model, a scalable and reliable server means it must be stable facing large number of concurrent clients/requests and behave as expected when faults occur.
 
 Some more specific research questions related to the main question are:
 
 \begin{enumerate}
 
-\item How can The Constrained Application Protocol be implemented? 
+\item How can The Constrained Application Protocol be implemented in the context of Erlang? 
 \item What architecture should be used to provide both concurrency and fault-tolerance? 
 \item What interface should be given for potential application developers for easy integration? 
 \item How can a benchmark tool be constructed to evaluate the implementation? 

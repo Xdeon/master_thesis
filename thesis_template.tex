@@ -14,6 +14,19 @@
 
 \usepackage{makecell}
 
+\usepackage{minted}
+
+%\usepackage{xpatch,letltxmacro}
+%\LetLtxMacro{\cminted}{\minted}
+%\let\endcminted\endminted
+%\xpretocmd{\cminted}{\RecustomVerbatimEnvironment{Verbatim}{BVerbatim}{}}{}{}
+
+%\usemintedstyle{borland}
+
+\usepackage{xcolor}
+
+%\usepackage{listings}
+
 \DeclareRobustCommand\nocite[1]{%
     {\def\cite##1{\ignorespaces}#1}}
 \newcommand\nocitecaption[1]{\caption[\nocite{#1}]{#1}}

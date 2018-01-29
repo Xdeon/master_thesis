@@ -1,2 +1,192 @@
 \chapter{Architecture and Implementation}\label{ch4}
 
+Research on architectures for Web servers have been conducted for years since the Web itself scales rapidly with the ever-growing traffic. One focus in such research is scalability, which can be even defined with more restrictions as, executing concurrent tasks efficiently on modern computing hardwares with multiple cores integrated. Originally handling concurrent requests in Web servers was introduced by the scenario that connections from multiple clients need to be accepted at the same time in order to better utilize the CPU during I/O operations \cite{kovatsch2015scalable}, which is more a requirement for connection-based protocol like HTTP. Though CoAP takes a different way compared with HTTP, the stage of request processing is similar and concurrency support is still necessary when facing a busy traffic. Different server architecture evolves over a decade, from which M. Lanter \cite{lanter2013scalability} and M. Kovatsch \cite{kovatsch2015scalable} have summarized the most significant ones as following, Multi-Process (MP), Multi-Threaded (MT), Single-Process Event-Driven (SPED), Asynchronous Multi-Process Event-Driven (AMPED), Stage Event-Driven Architecture (SEDA) and Multi-Threaded Pipelined (PIPELINED). 
+
+The first attempts of improving server performance was to employ more processes or threads in order to better utilize the CPU(s), which was easy to follow (as one process/thread to one user/request mapping was used and sequential logic could still be applied) but has been proved too expensive in terms of creation time, memory usage and context-switching. The following event-driven style architecture offers better performance especially on single core as it is non-blocking and fewer threads are created and reused during the lifetime of an application. However, both methods have their pitfalls. 
+
+At a logical level, all server-side frameworks and applications have concurrent threads of control that transform the state space in a collaborative fashion \cite{UCAM-CL-TR-769}. Nevertheless, using threads directly as a programming model adds complexity in both data and control plane \cite{UCAM-CL-TR-769}\cite{Lee:2006:PT:1137232.1137289}. Threading model usually assumes a shared memory in which the updatable state resides and different threads of control take turns directly modifying the state space in-place. A variety of locking mechanism are used to guard and serialize the updates to the shared state in order to synchronize among threads. This can make for a highly concurrent system, but is extremely error-prone and hard to reason about especially when it is combined with object-oriented programming, because the later then limits the visibility that certain portions of a program have into portions of the state and effectively partitions the state space \cite{Lee:2006:PT:1137232.1137289}. Threads are also not a practical abstraction in distributed computing as the effort to make a shared memory illusion is expensive \cite{Lee:2006:PT:1137232.1137289}. On the other hand, the asynchronous, non-blocking event-driven code essentially consists of a single thread with a main loop which waits and processes events accordingly. Because the thread of control is not interrupted preemptively, which in turn ensures that state updates can be made consistently without using locks, event-driven style often provides simplicity and performance over a multi-threaded architecture \cite{UCAM-CL-TR-769}. However, event-driven inverts the control flow and effectively turns a program into reactive style, which makes it more complicated to block and harder to understand when the problem space increases \cite{von2003events}. Also event-drive often assumes a uniprocessor context when compared with multi-threads model, and therefore would underperform under a multi-core or many-core environment. There exist attempts to combine the two paradigms where many single-threaded event-driven processes cooperate together. Such effort, however, still suffers from the synchronization issues mentioned before \cite{von2003events}.
+
+Concurrency in software is difficult and using threads as a concurrency abstraction makes it worse \cite{Lee:2006:PT:1137232.1137289}. Non-trivial multi-threaded programs are difficult to comprehend. On the other hand, because threads are insufficient from a footprint and performance perspective, using threads as software unit of concurrency can not match the scale of the domain's unit of concurrency today anymore. As an alternative, programmers have to use constructs that implement concurrency on a finer-grained level than threads and support concurrency by writing asynchronous code that does not block the thread running it, which are, however, hard to write, understand and debug as well \cite{java-loom}. Moreover, since today's modern hardwares are equipped with multi-core or even many-core chips, which are essentially distributed systems themselves, the assumption of threading model makes it harder to be transparently portable and fully utilize the underlying hardwares \cite{UCAM-CL-TR-769}. 
+
+With all above being said, as Edward Lee \cite{Lee:2006:PT:1137232.1137289} pointed out, alternative paradigm such as concurrent coordination languages with actor-oriented style of concurrency should be put more attention to. A language with actor paradigm built-in such as Erlang, though does not fully qualify a proper concurrent coordination language, still compensates many shortages of the threading model. An actor in Erlang is an Erlang process which is lightweight enough and can be started and destroyed very quickly, therefore allowing 
+much easier design patterns that could use as many processes as needed. And code can be written in a linear, blocking, imperative style. All above greatly eases the burden of modelling the domain problem. On the other hand, actors have isolated memory and can only communicate using message passing, which avoids the problems and mistakes such as low-level data races and the subtleties of memory models associated with the current shared-memory paradigm \cite{UCAM-CL-TR-769}. Moreover, as a functional programming language, data is immutable in Erlang and messages between actors are copied in most cases, which further enhances this feature. The forementioned point could lead to inefficiency compared with languages where data are mutable and can be referenced by pointers, which, however is a trade-off for fault-tolerance.
+
+Erlang has strong fault-tolerance support since its background was rooted in telecommunication industry, which may not be a common feature in other actor based solutions. The first writers of Erlang treat availability and reliability more important than other features in order to develop systems that ``never stop". As a dynamic typed language, Erlang has facilities that help upgrade an online system without any shut down time, which is also known as ``hot code reload". When it comes to faults, instead of preventing errors and problems, Erlang assumes they happen from time to time and provides good way to handle them. It is proved that the main sources of downtime in large-scale software systems are intermittent or transient bugs \cite{candea2003crash}. And errors which corrupt data should make the faulty part of the system to die as fast as possible in order to avoid propagating errors and bad data to the rest of the system \cite{learn_you_some_erlang}. So the Erlang way of handling failures is to kill processes as fast as possible to avoid data corruption and transient bugs. The sharing-nothing, immutable data, avoiding locks and other safeguards in Erlang ensures a crash is the same as clean shutdown \cite{learn_you_some_erlang}. And the ability of an Erlang process to receive signal when other process of interest terminates enables a supervision tree structure in an application, where the leaf nodes being workers who execute actual tasks and higher nodes being supervisors that can take immediate actions upon accidental termination of its children (worker nodes), such as reboot the worker to a known state. Such a structure effectively separates error handling and application logic. The idea is also called ``Let it crash",  which on one hand prevents programmers from over defensive-programming, on the other hand let the application only handle exceptional cases that are expected while hide unexpected intra-system failures from the end users since they are already as self-contained as possible, improving the perceived reliability of the service. One can still dig into errors and failures afterwards to diagnose though, since this mechanism does not aim at ignoring errors (they are recorded accordingly) but saves the system from crash upon the very error occurs. The fault-tolerance model of Erlang is not a new one, robust computer systems use similar strategy more or less \cite{gray1986computers}. However, few environment provide such a finer-grained level of control over faults as Erlang does.
+
+The actor model Erlang based on supports transparent distribution which makes it identical whether two communicating processes locate at the same machine or not. This is achieved by passing messages in a total asynchronous manner so that no assumption of the communication results is made \cite{learn_you_some_erlang}. The transparent distribution benefits both scaling and fault-tolerance. It naturally transfers to multicore processors in a way that is largely transparent to the programmer, so that one can run Erlang programs on more powerful hardware or over multiple machines without having to largely refactor them. Having concurrent Erlang VMs running and talking through message passing, the same pattern of communicating, detecting failure and relaunching or handling things can be applied on the far end. The asynchronous message passing also makes it possible for user shell or any code, as an Erlang process, to inspect the status of a remote virtual machine and manipulate the system with much less effort than other solutions.  
+
+Erlang runs on a virtual machine that has preemptive scheduling and per-process garbage collection built-in, which is vital for the runtime to achieve soft real-time, another telecom industry requirement. Preemptive scheduling is not as efficient as cooperative scheduling which is used in language like Go, but is more consistent, meaning that millions of small operations can't be delayed by a single large operation that doesn't relinquish control. 
+
+The characteristics mentioned before not only render Erlang as a successful telecom industry language, but also make it suitable in Web service where high concurrency and fault-tolerance are needed, such as Web servers and chat service. In this work, it is argued that the Internet of Things share similarities with these areas. And with new paradigms such as Fog Computing emerging, IoT intends to be made up of more distributed computing force where latency is sensitive and scales from embedded platforms to cloud backends. Erlang should fit well in such circumstances. 
+
+Erlang itself is no silver bullet. It is particularly inappropriate to use Erlang in signal/imaging processing, number crunching or any other CPU-intensive tasks. And it could be slower than other solutions because the language is dynamic typed and running on a virtual machine. Preemptive scheduling as well as all other effort towards high concurrency and fault-tolerance also brings overhead, which makes Erlang only perform better than other solutions under proper domain problems/workloads, such as busy server-side applications with lots of network traffic but few heavy computing tasks. However, since any non-trivial application is unlikely to be powered by single technology, the patterns used in Erlang are also applicable to other languages. For instance, Akka \cite{akka} is an open-source toolkit for building concurrent and distributed applications on the JVM, which is written in Scala and emphasizes the actor-oriented programming model over others ; Kilim \cite{srinivasan2008kilim}\cite{UCAM-CL-TR-769} is a Java actor-oriented server framework which does the magic by transforming the Java bytecode; Project Loom \cite{java-loom} is a proposal that intends to introduce Fibers (similar concepts to actors) into the JVM. Complex server-side systems usually use a mixture of multiple languages and consist of isolated subsystems that communicate using well-defined messages \cite{UCAM-CL-TR-769}. This resembles actor-oriented Erlang system anyway. It is the maturity of the language and runtime that renders Erlang as the primary environment in this thesis.
+
+\section{Concurrency Model}
+
+The popular Java CoAP server/client framework Californium was inspired by previous work for highly concurrent Internet services, in particular SEDA and the PIPELINED architecture \cite{lanter2013scalability}\cite{kovatsch2015scalable}. However, much of its assumption is invalid in a concurrency-oriented language context, since creation and synchronization of lightweight process is much cheaper. Therefore, a more intuitive and straight forward architecture like Multi-Process (MP) is still an attractive option. The primary goal of the design is to allow scalability and fault-tolerance following the idiomatic concurrency-oriented language way, that is, isolation of processing, data and faults. In general, the \textit{ecoap} prototype can be logically split up to socket manager(s), endpoints and various handlers, as well as server registry, as shown in figure \ref{fig:ecoap_general_arch}, where each component consists of one or more Erlang processes. Without considering further optimizations, the components function as follows:
+
+\begin{figure}
+\label{fig:ecoap_general_arch}
+\end{figure}
+
+\subsection{CoAP Socket Manger}\label{socket_manager}
+
+The workhorse of the CoAP Socket Manager is an Erlang process which holds the socket. It is responsible for receiving binary data over the network and applying flow control if desired. It therefore abstracts the transport protocol, which is UDP in plain CoAP. Though out of scope of this thesis, the component can be easily replaced by wrapping a socket that listens on DTLS port or over other transport layer. The difference is that a single process shared by all endpoints is used for plain CoAP since it is a connection-less protocol, while multiple processes exist with DTLS, where each process holds a separate socket and maps to exactly one endpoint. 
+
+With plain CoAP, the CoAP Socket Manager becomes the only place where data traffic go through. In order to avoid bottleneck, the process should do as little work as possible. When the socket process receives a datagram from a new remote endpoint, it starts a local CoAP Endpoint and passes the datagram to it together with the source address and port. When a client intends to issue a request towards a server that is not touched before, the socket process starts a local CoAP Endpoint as well and passes the provided destination address and port to it so the client can use the component to send the request. The CoAP Endpoint component is a representation of remote endpoints inside \textit{ecoap} which does the real processing job and a one-to-one mapping is applied. Consequently their number is dynamic and will not be reused. 
+
+The CoAP Endpoints are monitored by the socket process to maintain a dynamic dispatch table so that it can hands received datagrams to corresponding CoAP Endpoint immediately, as shown in figure \ref{fig:coap_socket_manager}. The dispatching is based on the inner process dictionary of the socket process. A process dictionary is a destructive local key-value store in an Erlang process. It should be noted that process dictionary destroys referencial transparency and makes debugging difficult \cite{}. It is primarily used to store system information used by the VM that does not change a lot during the lifetime of a process. However, when being used with care (packaging its operation inside well-defined API which does not touch other states), process dictionary provides faster reading/writing performance than other key-value stores in Erlang. Thus the process dictionary is used as a fast dispatch table where the key is a tuple of remote endpoint address and port and the value is the process identifier (PID) of the worker process that represents the endpoint in the rest time of processing. A PID is a unique and arbitrary value representing an Erlang process and can be used as an address to communicate with the process. 
+
+\begin{figure}
+\label{fig:coap_socket_manager}
+\end{figure}
+
+An interesting feature of the Erlang runtime is while only the owner of a socket can read data from it, any other process can write to it as long as the process has access to the socket reference. This behaviour can be used to improve port parallelism. So, it is desirable that the socket reference is also passed to worker process when it is created, which enables the worker to send messages directly over the network without further bothering the socket manager. It largely reduces the work load of the socket process and makes the dispatching between socket process and CoAP Endpoints a totally asynchronous manner.
+
+Though it is possible to improve data throughput by letting multiple processes listen on the same port, each holding a different socket, this behaviour largely depends in underlying operating system and does not behave uniformly. On the other hand, having a single process instead of many simplifies the management of socket and data dispatching.
+
+\subsection{CoAP Endpoint}
+
+The core component of \textit{ecoap} is the CoAP Endpoint. Because of the low cost of creating and destroying processes in Erlang, a one-to-one mapping between the actual CoAP endpoints and worker processes is taken by \textit{ecoap}, which means messages from one endpoint are guaranteed to be handled by the same CoAP Endpoint during the communication lifetime. It is a common design pattern among Erlang applications to model truly concurrent unit each as a separate process. Since many Erlang Web server implementations employ TCP or similar connection-oriented protocol, it is natural to model system in such a way that each connection is a process. Though this work is based on a connection-less protocol, modelling each endpoint in the similar way as a connection still provides a straight forward architecture. 
+
+As shown in figure \ref{fig:coap_endpoint}, a CoAP Endpoint consists of a \verb|ecoap_endpoint| process and many handler processes. The \verb|ecoap_endpoint| is a worker process responsible for message decoding/encoding, message deduplication, optional retransmission for reliable message exchange, message identifier and token management as well as tracking handler processes. One can thing a a \verb|ecoap_endpoint| process as the message-layer of CoAP while different handler process as the request/response-layer. 
+
+The work flow of a CoAP Endpoint can be briefly described as follows. After receiving the incoming datagram, the \verb|ecoap_endpoint| process decodes the message to \textit{ecoap}'s inner presentation, and hands the message to appropriate handler process for further processing. After the handler process finishes its task, it passes the result back to the \verb|ecoap_endpoint| process which then manipulates its inner state according to the type of this message exchange (i.e. an incoming CON request with an outgoing ACK piggybacked response) and encodes the result, sending it over the network using the socket reference and address and port of the remote endpoint. The \verb|ecoap_endpoint| process also sets a one-way monitor on every handler process so that it can be acknowledged when they terminate (either because finishing their job or crashed). This has an important impact on the lifespan of a CoAP Endpoint, which will be discussed later in \ref{state_management}. 
+
+\begin{figure}
+\label{fig:coap_endpoint}
+\end{figure}
+
+Depending on the role of the system, the handler process can acts as:
+
+\begin{itemize}
+
+\item \textbf{Servers}
+
+A \verb|ecoap_handler| process is used to execute server-side logic, including invoking CoAP resource handler functions, server-side block-wise transfer and observe management. 
+
+A CoAP resource provides a RESTful interface and can be accessed and modified through reacting to requests that carry one of the four request codes defined in CoAP: GET, POST, PUT, or DELETE. One can define a CoAP resource by implementing its handler functions as callbacks required by \verb|coap_resource| module, which is similar to an interface in object-oriented programming, and register the mapping of resource URI to handler functions at the CoAP Registry. When a request arrives at the server, eventually a \verb|ecoap_handler| process searches the registry for a resource that corresponds to the destination URI of the request. If the \verb|ecoap_handler| process finds the resource, the handler functions are executed to process the request and responds with an appropriate response code, options and payload according to the protocol specification, otherwise a 4.04 (Not Found) error code is responded. The generated response is then passed back to corresponding \verb|ecoap_endpoint| process which sends it to the client. 
+
+The \verb|ecoap_handler| process is spawned by the \verb|ecoap_endpoint| process on demand and on the fly. For any ordinary request, it terminates immediately after sending the response and no other bookkeeping work other than the monitoring is done by the corresponding \verb|ecoap_endpoint| process. 
+
+However, for block-wise transfer and observe requests, a \verb|ecoap_handler| process keeps serving following requests to the same resource. In detail, requests for one particular resource with the same CoAP method and query (CoAP Uri-Query option) will be processed by the same \verb|ecoap_handler| process as long as there is a block-wise transfer or observe relation towards the resource going on. The \verb|ecoap_handler| process lives until the block-wise transfer completes, or the client cancels the observe relation. 
+
+This is achieved as follows. After analyzing the request, the very \verb|ecoap_handler| process informs the corresponding \verb|ecoap_endpoint| process its intention to be alive and the latter records its identifier as a combination of CoAP method and query so that subsequent requests matching the identifier can be delivered correctly. Since a \verb|ecoap_endpoint| process always monitors the handler process, it will be informed on termination of the handler process and remove the relation. While requests with different method and query towards that resource will be handled in newly spawned \verb|ecoap_handler| process. This serves two purposes. The first one is it greatly simplifies block-wise transfer and observe management. A \verb|ecoap_handler| process processing a block-wise transfer works in an atomic fashion as defined in RFC7959 \cite{blockwise}. It caches the complete representation for the client to retrieve step by step, or gradually collects the data uploaded by the client. The static mapping in this case avoids resource state being spread over multiple places. When handling observe relation establishment, a \verb|ecoap_handler| process registers itself to \textit{pg2}, a distributed named process groups application that comes with standard Erlang distribution, with the resource URI as the group name. One can then notify the client recent updates of the resource of interest by simply sending the resource update as Erlang message to the group name, which will be broadcasted to all registered processes by \textit{pg2} afterwards. More details of observe management can be found in \ref{observe_management}. The static mapping again avoids separation of states and provides a clear model. The second benefit is that requests that are not involved in current block-wise/observe activity can be handled concurrently. Especially when the resource handler is executing a time-consuming task, it can safely block since other request will be processed in other \verb|ecoap_handler| processes, which renders more intuitive and straight forward code.
+
+\item \textbf{Clients}
+
+The \verb|ecoap_client| process serves as the request/response layer when a client  issues requests. It encapsulates request composing, client-side block-wise transfer and observe management. 
+
+Synchronous and Asynchronous requests are both supported. A user process, which is an external Erlang process can act as the caller of a \verb|ecoap_client| process and ask the it to perform request on behalf of the user process. Synchronous calls block the caller process until a response is delivered. Asynchronous calls return immediately with a reference (a tag that is unique within an Erlang runtime). The response will later be delivered as message to the caller process, which can be pattern matched against the request reference so that the request and response are associated. 
+
+Different from ordinary request calls, synchronous and asynchronous observe calls both have a reference in their return values. The synchronous observe calls also return with the first notification along with the reference. Proactive observe cancellation calls are provided in the same manner as observe calls. When a user process asks the \verb|ecoap_client| process to observe a resource when it is already being observed, the behaviour of \verb|ecoap_client| process is compliant with the re-observe action defined in RFC7641 \cite{coap_observe}, that is, reusing the same request token.
+
+The \verb|ecoap_client| process also handles block-wise transfer in an atomic fashion, where the response is handed to user process only after the whole exchange completes. Concurrent block-wise transfer is a undefined behaviour \cite{blockwise}. The \verb|ecoap_client| process deals with this by abandoning the ongoing block-wise exchange and continuing with the newly established one, which is essentially an overwrite. 
+
+Multiple user processes can share one \verb|ecoap_client| process since each request/response/observe/block-wise transfer tracking is self-contained and will not interrupt with each other. All tracking records are stored in Erlang maps as process inner state, which provides fast reading and writing.
+
+Moreover, one can use the reference achieved from an asynchronous call to cancel the issued request before the corresponding response is received. If the reference is from an observe call, the observe relation is cancelled in a reactive way, where the next notification from the server will be rejected by sending a RST message. Any ongoing block-wise transfer corresponding to the request is stopped immediately after invoking request cancel call. This is done by marking ongoing block-wise message exchange as \verb|cancelled| inside the associated \verb|ecoap_endpoint| process, which makes the process irresponsive to further events such as message retransmission. Further details about message exchange state management are discussed in \ref{state_management}.
+
+A \verb|ecoap_client| process can be started as a standalone client agent or an embedded one. A client agent refers to a combination of the \verb|ecoap_client| process, the socket process and the \verb|ecoap_endpoint| process. As a standalone agent, the process starts a socket process (with optional bounding port configuration) by itself and links to it. For the socket process, when the \verb|ecoap_client| process issues a request, besides the workflow described in \ref{socket_manager}, it directly links to the \verb|ecoap_endpoint| process. Therefore a standalone client agent usually consists of one \verb|ecoap_client| process, one socket process and one or many \verb|ecoap_endpoint| process(es). The client agent can be connected to any supervision tree in a standard way so that one can compose a customized application. While an embedded client agent uses existing socket process instead of spawning one. This can be useful when an application wants to behave as server and client at the same time while sharing the single address and port, like the one defined in OMA Lightweight M2M (LWM2M), an IoT device management protocol built on CoAP \cite{}. For instance, a \verb|ecoap_client| process can be started and specified to use the same socket process of a running \textit{ecoap} server. Then when issuing a request, the newly created \verb|ecoap_endpoint| process will be connected to the supervision tree of the server, and the same \verb|ecoap_endpoint| process will be used for both client role and server role which avoids duplication and confusion of states within the application. Depending on the requirement of the application, the \verb|ecoap_client| could be started either during the initialization of the server or inside a resource handler function.
+
+\end{itemize}
+
+The CoAP Endpoint is a more a loosely-coupled concept rather than a rigid structure such as a certain supervision tree. For example, the \verb|ecoap_endpoint| process and \verb|ecoap_handler|/\verb|ecoap_client| process have different linking relations depending on wether the application is in server or client role, and wether an embedded client agent is used. And the linking relation between CoAP Endpoint as a whole and the CoAP Socket Manager also varies in different scenarios. However, the CoAP protocol is always executed by message flows among one or more CoAP Socket Managers and CoAP Endpoints.
+
+\subsection{CoAP Registry}
+
+A CoAP Registry is essentially a manager for routing rules of a server. 
+
+
+
+\subsection{Supervision Tree}
+
+\subsection{Observe Management}\label{observe_management}
+
+\subsection{State Management and Process Lifespan}\label{state_management}
+
+%most software errors are transient errors - crash only software
+
+%preemptive scheduling is not as efficient as cooperative scheduling but is more consistent, meaning that millions of small operations can't be delayed by a single large operation that doesn't relinquish control.
+
+%Let it crash does not imply let it burn
+
+%scalability - it would be much easier to design programs that could have as many processes as needed instead of using process pools.
+
+%shared nothing and reliability - sharing memory could leave things in inconsistent state. etc. 
+
+%fault-tolerance
+
+%1. find good ways to handle errors and problems, rather than trying to prevent them all.
+%2. multiple processes with message passing - make error handling a separate logic - clear and easy
+%3. share nothing - errors that corrupt data should cause the faulty part of the system to die as fast as possible in order to avoid propagating errors and bad data to the rest of the system.
+%4. share nothing - all crashes are same as clean shutdowns
+%5. transparent distribution benefits both scaling and fault-tolerance
+%6. asynchronous message passing does not make any assumption on receiving side, which allows safe remote function calls
+
+%concurrency impl
+
+%os is not reliable and efficient enough
+
+%The solution is simply to have your program running on more than one computer at once?something that?s necessary for scaling anyway. This is another advantage of independent processes with no communication channel outside message passing. You can have them working the same way whether they?re local or on a different computer, making fault tolerance through distribution nearly transparent to the programmer.
+
+\section{Implementation}
+
+\subsection{Protocol}
+
+\subsection{Message Exchange}
+
+\subsection{API Example}
+
+hahahsahsahdadkadka
+
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\begin{listing}[!htbp]
+\centering
+\begin{minted}[
+bgcolor=bg,
+frame=lines,
+framesep=2mm,
+baselinestretch=1.2,
+fontsize=\footnotesize,
+linenos=true]
+{erlang}
+
+start() ->
+      application:stop(ecoap),
+      {ok, _} = application:ensure_all_started(ecoap),
+      ok = ecoap_registry:register_handler([
+            {[<<"benchmark">>], ?MODULE, undefined},
+            {[<<"fibonacci">>], ?MODULE, undefined},
+            {[<<"helloWorld">>], ?MODULE, undefined},
+            {[<<"shutdown">>], ?MODULE, undefined}
+        ]).
+
+stop() ->
+    application:stop(ecoap).
+
+% resource operations
+coap_discover(Prefix, _Args) ->
+    [{absolute, Prefix, []}].
+
+coap_get(_EpID, [<<"benchmark">>], _Name, _Query, _Request) ->
+    {ok, coap_content:new(<<"hello world">>)};
+
+coap_get(_EpID, [<<"helloWorld">>], _Name, _Query, _Request) ->
+    {ok, coap_content:new(<<"Hello World">>, #{'Content-Format' => <<"text/plain">>})};
+
+coap_get(_EpID, [<<"shutdown">>], _Name, _Query, _Request) ->
+    {ok, coap_content:new(<<"Send a POST request to this resource to shutdown the server">>)};
+
+coap_get(_EpID, _Prefix, _Name, _Query, _Request) ->
+    {error, 'NotFound'}.
+
+coap_post(_EpID, _Prefix, _Name, _Request) ->
+    {error, 'MethodNotAllowed'}.
+
+\end{minted}
+\end{listing}
+
+
+
+

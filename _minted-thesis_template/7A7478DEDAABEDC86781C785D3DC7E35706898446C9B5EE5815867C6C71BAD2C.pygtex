@@ -1,0 +1,33 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{n+nf}{start}\PYG{p}{()} \PYG{o}{\PYGZhy{}\PYGZgt{}}
+      \PYG{n+nn}{application}\PYG{p}{:}\PYG{n+nf}{stop}\PYG{p}{(}\PYG{n}{ecoap}\PYG{p}{),}
+      \PYG{p}{\PYGZob{}}\PYG{n}{ok}\PYG{p}{,} \PYG{p}{\PYGZus{}\PYGZcb{}} \PYG{o}{=} \PYG{n+nn}{application}\PYG{p}{:}\PYG{n+nf}{ensure\PYGZus{}all\PYGZus{}started}\PYG{p}{(}\PYG{n}{ecoap}\PYG{p}{),}
+      \PYG{n}{ok} \PYG{o}{=} \PYG{n+nn}{ecoap\PYGZus{}registry}\PYG{p}{:}\PYG{n+nf}{register\PYGZus{}handler}\PYG{p}{([}
+            \PYG{p}{\PYGZob{}[}\PYG{o}{\PYGZlt{}\PYGZlt{}}\PYG{l+s}{\PYGZdq{}benchmark\PYGZdq{}}\PYG{o}{\PYGZgt{}\PYGZgt{}}\PYG{p}{],} \PYG{o}{?}\PYG{n+nv}{MODULE}\PYG{p}{,} \PYG{n}{undefined}\PYG{p}{\PYGZcb{},}
+            \PYG{p}{\PYGZob{}[}\PYG{o}{\PYGZlt{}\PYGZlt{}}\PYG{l+s}{\PYGZdq{}fibonacci\PYGZdq{}}\PYG{o}{\PYGZgt{}\PYGZgt{}}\PYG{p}{],} \PYG{o}{?}\PYG{n+nv}{MODULE}\PYG{p}{,} \PYG{n}{undefined}\PYG{p}{\PYGZcb{},}
+            \PYG{p}{\PYGZob{}[}\PYG{o}{\PYGZlt{}\PYGZlt{}}\PYG{l+s}{\PYGZdq{}helloWorld\PYGZdq{}}\PYG{o}{\PYGZgt{}\PYGZgt{}}\PYG{p}{],} \PYG{o}{?}\PYG{n+nv}{MODULE}\PYG{p}{,} \PYG{n}{undefined}\PYG{p}{\PYGZcb{},}
+            \PYG{p}{\PYGZob{}[}\PYG{o}{\PYGZlt{}\PYGZlt{}}\PYG{l+s}{\PYGZdq{}shutdown\PYGZdq{}}\PYG{o}{\PYGZgt{}\PYGZgt{}}\PYG{p}{],} \PYG{o}{?}\PYG{n+nv}{MODULE}\PYG{p}{,} \PYG{n}{undefined}\PYG{p}{\PYGZcb{}}
+        \PYG{p}{]).}
+
+\PYG{n+nf}{stop}\PYG{p}{()} \PYG{o}{\PYGZhy{}\PYGZgt{}}
+    \PYG{n+nn}{application}\PYG{p}{:}\PYG{n+nf}{stop}\PYG{p}{(}\PYG{n}{ecoap}\PYG{p}{).}
+
+\PYG{c}{\PYGZpc{} resource operations}
+\PYG{n+nf}{coap\PYGZus{}discover}\PYG{p}{(}\PYG{n+nv}{Prefix}\PYG{p}{,} \PYG{p}{\PYGZus{}}\PYG{n+nv}{Args}\PYG{p}{)} \PYG{o}{\PYGZhy{}\PYGZgt{}}
+    \PYG{p}{[\PYGZob{}}\PYG{n}{absolute}\PYG{p}{,} \PYG{n+nv}{Prefix}\PYG{p}{,} \PYG{p}{[]\PYGZcb{}].}
+
+\PYG{n+nf}{coap\PYGZus{}get}\PYG{p}{(\PYGZus{}}\PYG{n+nv}{EpID}\PYG{p}{,} \PYG{p}{[}\PYG{o}{\PYGZlt{}\PYGZlt{}}\PYG{l+s}{\PYGZdq{}benchmark\PYGZdq{}}\PYG{o}{\PYGZgt{}\PYGZgt{}}\PYG{p}{],} \PYG{p}{\PYGZus{}}\PYG{n+nv}{Name}\PYG{p}{,} \PYG{p}{\PYGZus{}}\PYG{n+nv}{Query}\PYG{p}{,} \PYG{p}{\PYGZus{}}\PYG{n+nv}{Request}\PYG{p}{)} \PYG{o}{\PYGZhy{}\PYGZgt{}}
+    \PYG{p}{\PYGZob{}}\PYG{n}{ok}\PYG{p}{,} \PYG{n+nn}{coap\PYGZus{}content}\PYG{p}{:}\PYG{n+nf}{new}\PYG{p}{(}\PYG{o}{\PYGZlt{}\PYGZlt{}}\PYG{l+s}{\PYGZdq{}hello world\PYGZdq{}}\PYG{o}{\PYGZgt{}\PYGZgt{}}\PYG{p}{)\PYGZcb{};}
+
+\PYG{n+nf}{coap\PYGZus{}get}\PYG{p}{(\PYGZus{}}\PYG{n+nv}{EpID}\PYG{p}{,} \PYG{p}{[}\PYG{o}{\PYGZlt{}\PYGZlt{}}\PYG{l+s}{\PYGZdq{}helloWorld\PYGZdq{}}\PYG{o}{\PYGZgt{}\PYGZgt{}}\PYG{p}{],} \PYG{p}{\PYGZus{}}\PYG{n+nv}{Name}\PYG{p}{,} \PYG{p}{\PYGZus{}}\PYG{n+nv}{Query}\PYG{p}{,} \PYG{p}{\PYGZus{}}\PYG{n+nv}{Request}\PYG{p}{)} \PYG{o}{\PYGZhy{}\PYGZgt{}}
+    \PYG{p}{\PYGZob{}}\PYG{n}{ok}\PYG{p}{,} \PYG{n+nn}{coap\PYGZus{}content}\PYG{p}{:}\PYG{n+nf}{new}\PYG{p}{(}\PYG{o}{\PYGZlt{}\PYGZlt{}}\PYG{l+s}{\PYGZdq{}Hello World\PYGZdq{}}\PYG{o}{\PYGZgt{}\PYGZgt{}}\PYG{p}{,} \PYG{p}{\PYGZsh{}\PYGZob{}}\PYG{n}{\PYGZsq{}Content\PYGZhy{}Format\PYGZsq{}} \PYG{o}{=\PYGZgt{}} \PYG{o}{\PYGZlt{}\PYGZlt{}}\PYG{l+s}{\PYGZdq{}text/plain\PYGZdq{}}\PYG{o}{\PYGZgt{}\PYGZgt{}}\PYG{p}{\PYGZcb{})\PYGZcb{};}
+
+\PYG{n+nf}{coap\PYGZus{}get}\PYG{p}{(\PYGZus{}}\PYG{n+nv}{EpID}\PYG{p}{,} \PYG{p}{[}\PYG{o}{\PYGZlt{}\PYGZlt{}}\PYG{l+s}{\PYGZdq{}shutdown\PYGZdq{}}\PYG{o}{\PYGZgt{}\PYGZgt{}}\PYG{p}{],} \PYG{p}{\PYGZus{}}\PYG{n+nv}{Name}\PYG{p}{,} \PYG{p}{\PYGZus{}}\PYG{n+nv}{Query}\PYG{p}{,} \PYG{p}{\PYGZus{}}\PYG{n+nv}{Request}\PYG{p}{)} \PYG{o}{\PYGZhy{}\PYGZgt{}}
+    \PYG{p}{\PYGZob{}}\PYG{n}{ok}\PYG{p}{,} \PYG{n+nn}{coap\PYGZus{}content}\PYG{p}{:}\PYG{n+nf}{new}\PYG{p}{(}\PYG{o}{\PYGZlt{}\PYGZlt{}}\PYG{l+s}{\PYGZdq{}Send a POST request to this resource to shutdown the server\PYGZdq{}}\PYG{o}{\PYGZgt{}\PYGZgt{}}\PYG{p}{)\PYGZcb{};}
+
+\PYG{n+nf}{coap\PYGZus{}get}\PYG{p}{(\PYGZus{}}\PYG{n+nv}{EpID}\PYG{p}{,} \PYG{p}{\PYGZus{}}\PYG{n+nv}{Prefix}\PYG{p}{,} \PYG{p}{\PYGZus{}}\PYG{n+nv}{Name}\PYG{p}{,} \PYG{p}{\PYGZus{}}\PYG{n+nv}{Query}\PYG{p}{,} \PYG{p}{\PYGZus{}}\PYG{n+nv}{Request}\PYG{p}{)} \PYG{o}{\PYGZhy{}\PYGZgt{}}
+    \PYG{p}{\PYGZob{}}\PYG{n}{error}\PYG{p}{,} \PYG{n}{\PYGZsq{}NotFound\PYGZsq{}}\PYG{p}{\PYGZcb{}.}
+
+\PYG{n+nf}{coap\PYGZus{}post}\PYG{p}{(\PYGZus{}}\PYG{n+nv}{EpID}\PYG{p}{,} \PYG{p}{\PYGZus{}}\PYG{n+nv}{Prefix}\PYG{p}{,} \PYG{p}{\PYGZus{}}\PYG{n+nv}{Name}\PYG{p}{,} \PYG{p}{\PYGZus{}}\PYG{n+nv}{Request}\PYG{p}{)} \PYG{o}{\PYGZhy{}\PYGZgt{}}
+    \PYG{p}{\PYGZob{}}\PYG{n}{error}\PYG{p}{,} \PYG{n}{\PYGZsq{}MethodNotAllowed\PYGZsq{}}\PYG{p}{\PYGZcb{}.}
+\end{Verbatim}

@@ -21,15 +21,23 @@
 %\let\endcminted\endminted
 %\xpretocmd{\cminted}{\RecustomVerbatimEnvironment{Verbatim}{BVerbatim}{}}{}{}
 
-%\usemintedstyle{borland}
+\usemintedstyle{default}
 
 \usepackage{xcolor}
+
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
 
 %\usepackage{listings}
 
 \DeclareRobustCommand\nocite[1]{%
-    {\def\cite##1{\ignorespaces}#1}}
+Â Â Â Â {\def\cite##1{\ignorespaces}#1}}
 \newcommand\nocitecaption[1]{\caption[\nocite{#1}]{#1}}
+
+\usepackage[style=trad-plain]{biblatex}
+
+\addbibresource{/Users/wilbur/Documents/Usask/PapersAndReferences/references.bib}
+
+\DeclareFieldFormat{titlecase}{#1}
 
 % Documentation for the uofsthesis-cs class is given in uofsthesis-cs.dvi
 % 
@@ -151,11 +159,6 @@ Acknowledgements go here.  Typically you would at least thank your supervisor.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \input intro.tex
-\input problem_statement.tex
-\input related_work.tex
-\input architecture_and_implementation.tex
-\input evaluation.tex
-\input conclusion.tex
 
 % Since thesis chapters are very long and there are a lot of them, it is recommended
 % that you put each chapter in a separate .tex file and \input each one of them
@@ -171,10 +174,11 @@ Acknowledgements go here.  Typically you would at least thank your supervisor.
 % SUBSEQUENT CHAPTERS (or \input's)  GO HERE
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
-
-
-
+\input problem_statement.tex
+\input related_work.tex
+\input architecture_and_implementation.tex
+\input evaluation.tex
+\input conclusion.tex
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % The Bibliograpy should go here. BEFORE appendices!
@@ -185,15 +189,17 @@ Acknowledgements go here.  Typically you would at least thank your supervisor.
 % Optionally, you can specify the bibliography style to use:
 % \uofsbibliography[stylename]{yourbibfile}
 
-\uofsbibliography[abbrv]{/Users/wilbur/Documents/Usask/PapersAndReferences/references.bib}
+%\uofsbibliography[plain]{/Users/wilbur/Documents/Usask/PapersAndReferences/references.bib}
 
 % If you are not using bibtex, comment the line above and uncomment
 % the line below.  
 %Follow the line below with a thebibliography environmentand bibitems.  
 % Note: use of bibtex is usually the preferred method.
 
-%\uofsbibliographynobibtex
+\uofsbibliographynobibtex
 
+\setlength\bibitemsep{0.5\baselineskip}
+\printbibliography
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % APPENDICES

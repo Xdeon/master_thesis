@@ -2304,10 +2304,12 @@
     <bcf:citekey order="161">UCAM-CL-TR-769</bcf:citekey>
     <bcf:citekey order="162">lanter2013scalability</bcf:citekey>
     <bcf:citekey order="163">kovatsch2015scalable</bcf:citekey>
+    <bcf:citekey order="164">erl_proc_dict</bcf:citekey>
     <bcf:citekey order="165">blockwise</bcf:citekey>
     <bcf:citekey order="166">pg2_failure</bcf:citekey>
     <bcf:citekey order="167">coap_observe</bcf:citekey>
     <bcf:citekey order="168">blockwise</bcf:citekey>
+    <bcf:citekey order="169">lwm2m</bcf:citekey>
     <bcf:citekey order="170">learn_you_some_erlang</bcf:citekey>
     <bcf:citekey order="171">lanter2013scalability</bcf:citekey>
     <bcf:citekey order="172">coap_protocol</bcf:citekey>

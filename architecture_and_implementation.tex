@@ -44,7 +44,7 @@ With the above in mind, the subsequent sections are organized as follows. Detail
 The workhorse of the socket manager is an Erlang process which holds the socket. It is responsible for receiving binary data over the network and applying flow control if desired. 
 It therefore abstracts the transport protocol, which is UDP in plain CoAP. Though out of scope of this thesis, the component can be easily replaced by wrapping a socket that listens on DTLS port or over other transport layer. The main difference would be instead of a single instance that is known by all endpoints, a connection-oriented alike transport protocol will render more socket processes to match concurrent connections and therefore a one-to-one mapping for socket process and endpoint applies. 
 
-With plain CoAP, the socket manager becomes the only place where data traffic goes through, as the received datagrams are also sent as plain Erlang messages to the process by the runtime. In order to avoid bottleneck, the process should do as little work as possible. When the socket process receives a datagram from a new remote endpoint as server, it starts a local endpoint process and passes the datagram to it together with the source address and port. When a client intends to issue a request towards a server that is not touched before, the socket process starts a local endpoint process as well and passes the provided destination address and port to it so the client can use the component to send the request. The endpoint processes are monitored by the socket manager to maintain a dynamic dispatch table so that it can hands received datagrams to corresponding endpoint process immediately, as shown in figure \ref{fig:coap_socket_manager}. The dispatching is based on the inner process dictionary of the socket process. A process dictionary is a destructive local key-value store in an Erlang process. It should be noted that process dictionary destroys referencial transparency and makes debugging difficult \cite{}. It is primarily used to store system information used by the VM that does not change a lot during the lifetime of a process. However, when being used with care (packaging its operation inside well-defined API which does not touch other states), process dictionary provides faster reading/writing performance than other key-value stores in Erlang. Thus the process dictionary is used as a fast dispatch table where the key is a tuple of remote endpoint address and port, and the value is the process identifier (PID) of the worker process that receives messages from the endpoint in the rest time of processing. 
+With plain CoAP, the socket manager becomes the only place where data traffic goes through, as the received datagrams are also sent as plain Erlang messages to the process by the runtime. In order to avoid bottleneck, the process should do as little work as possible. When the socket process receives a datagram from a new remote endpoint as server, it starts a local endpoint process and passes the datagram to it together with the source address and port. When a client intends to issue a request towards a server that is not touched before, the socket process starts a local endpoint process as well and passes the provided destination address and port to it so the client can use the component to send the request. The endpoint processes are monitored by the socket manager to maintain a dynamic dispatch table so that it can hands received datagrams to corresponding endpoint process immediately, as shown in figure \ref{fig:coap_socket_manager}. The dispatching is based on the inner process dictionary of the socket process. A process dictionary is a destructive local key-value store in an Erlang process. It should be noted that process dictionary destroys referencial transparency and makes debugging difficult \cite{erl_proc_dict}. It is primarily used to store system information used by the VM that does not change a lot during the lifetime of a process. However, when being used with care (packaging its operation inside well-defined API which does not touch other states), process dictionary provides faster reading/writing performance than other key-value stores in Erlang. Thus the process dictionary is used as a fast dispatch table where the key is a tuple of remote endpoint address and port, and the value is the process identifier (PID) of the worker process that receives messages from the endpoint in the rest time of processing. 
 
 \begin{figure}[!htbp]
 \centering
@@ -136,7 +136,7 @@ A client can be started as a standalone one or an embedded one. As a standalone 
 \label{fig:ecoap_client_embedded}
 \end{figure}
 
-While an embedded client uses existing socket manager instead of spawning one. This can be useful when an application wants to behave as server and client at the same time while sharing the single network interface, like the behaviour defined in OMA Lightweight M2M (LWM2M), an IoT device management protocol built ontop CoAP \cite{}. For instance, an \verb|ecoap_client| process can be started and specified to use the same socket manager of a running \textit{ecoap} server. Then when issuing a request, the newly created \verb|ecoap_endpoint| process will be connected to the supervision tree of the server, and the very \verb|ecoap_endpoint| process will be used for both client role and server role which avoids duplication and confusion of states within the application. Last but not least, depending on the requirement of the application, the \verb|ecoap_client| could be started either during the initialization of the server or inside a resource handler function.
+While an embedded client uses existing socket manager instead of spawning one. This can be useful when an application wants to behave as server and client at the same time while sharing the single network interface, like the behaviour defined in OMA Lightweight M2M (LWM2M), an IoT device management protocol built ontop CoAP \cite{lwm2m}. For instance, an \verb|ecoap_client| process can be started and specified to use the same socket manager of a running \textit{ecoap} server. Then when issuing a request, the newly created \verb|ecoap_endpoint| process will be connected to the supervision tree of the server, and the very \verb|ecoap_endpoint| process will be used for both client role and server role which avoids duplication and confusion of states within the application. Last but not least, depending on the requirement of the application, the \verb|ecoap_client| could be started either during the initialization of the server or inside a resource handler function.
 
 Besides the state and lifespan management that will be discussed in \ref{state_management}, the endpoint process monitors the \verb|ecoap_client| process for another purpose. Assume in the embedded mode an \verb|ecoap_client| process exits due to any reason, the endpoint has to cancel all ongoing message exchanges that the client originated. The endpoint uses the monitor to track this extra information. It is inappropriate to let the endpoint process terminate with the client process as what would happen in a standalone client, because the endpoint process might be used by other client processes or by the server concurrently. In the standalone mode, termination of an \verb|ecoap_client| process will shutdown the socket manager and all alive endpoint processes anyway, no matter the termination is normal or a crash. The monitor is more for a consistent reason other than the purpose stated above.
 
@@ -171,7 +171,7 @@ With the forementioned guide in mind, the supervision tree of \textit{ecoap} is 
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[scale = 0.46]{system_arch}
+\includegraphics[scale = 0.49]{system_arch_vertical}
 \caption{Supervision tree of \textit{ecoap} as server}
 \label{fig:system_arch}
 \end{figure}
@@ -267,7 +267,7 @@ The socket manager, endpoint and handler processes make most communications in a
 
 It turns out simple to implement binary based protocols such as CoAP with pattern matching in Erlang. The following example shows how one could extract different parts of a binary CoAP message with one line of code, where the binary is split to segments separated by comma, pattern matched respectively and bound to corresponding variables. Fields begin with capital letter are free variables to be bound and the digit follows each field implies the length of the segment to be matched against. For example, \verb|Type:2| binds the two bits of the second segment to variable \verb|Type| and \verb|Token:TKL/bytes| means setting variable \verb|Token| to \verb|TKL| bytes start right after the 16 bits message identifier (\verb|TKL| is bound earlier in the match). On the other hand, the \verb|?VERSION| refers to a pre-defined macro that equals to the current CoAP version and can be seen as a constant. Therefore, \verb|?VERSION:2| matches the first two bits of the binary against the constant so that any binary starts with different two bits fails the match and will not be recognized as a proper CoAP message. Assume \verb|BinMessage| is a datagram received from network, the binary pattern matching avoids unnecessary parsing effort while legal parts of a message can be obtained effectively without further twiddling with bits. 
 
-\begin{listing}
+\begin{listing}[!htbp]
 \centering
 \begin{minted}
 [bgcolor=bg,
@@ -282,7 +282,7 @@ fontsize=\footnotesize
 
 It is error-prone and obscure to use the above format all over the application despite the convenient binary syntax of Erlang. Therefore, CoAP messages are further decoded and represented as Erlang record, which is a syntax sugar of tuple where attributes can be directly accessed by name. Listing \ref{lst:coap_message_record} and listing \ref{lst:coap_message_record_example} show the definition of the record for a CoAP message and an example, respectively. Default values can be set within the definition as well as the type of each field. One can then get attributes by only pattern matching against desired ones. For instance, pattern \verb|#coap_message{type=Type, id=MsgId, token=Token}| extracts \mintinline{erlang}|type|, \mintinline{erlang}|id| and \mintinline{erlang}|token| of a message while other parts are ignored. Updating of a record can be done in similar way. 
 
-\begin{listing}
+\begin{listing}[!htbp]
 \centering
 \begin{minted}
 [bgcolor=bg,
@@ -303,7 +303,7 @@ fontsize=\footnotesize
 \label{lst:coap_message_record}
 \end{listing}
 
-\begin{listing}
+\begin{listing}[!htbp]
 \centering
 \begin{minted}
 [bgcolor=bg,
@@ -446,7 +446,7 @@ ok = ecoap_client:close(Client).
 \label{lst:sync_client_api}
 \end{listing}
 
-A synchronous call blocks the caller until a valid response is delivered. If the server is unreachable and the request timeouts, \verb|{error, timeout}| will be returned. An optional timeout can be set, which will crash the caller if no response arrives within this time. For asynchronous calls, since the response are delivered as message, one can use either the \verb|receive| primitive in Erlang or let an OTP process handle it. In the observe example, a recursive function with selective receive spawned as a new process is used to illustrate how notifications can be received and how observe can be cancelled. This is not the only way and unnecessary if being used within an OTP process where messages are processed one after another.
+A synchronous call blocks the caller until a valid response is delivered. If the server is unreachable and the request timeouts, \verb|{error, timeout}| will be returned. An optional timeout can be set, which will crash the caller if no response arrives within this time. For asynchronous calls, since the response are delivered as message, one can use either the \verb|receive| primitive in Erlang or let an OTP process handle it. 
 
 \begin{listing}[!htbp]
 \centering
@@ -475,7 +475,9 @@ ok = ecoap_client:close(Client).
 \label{lst:async_client_api}
 \end{listing}
 
-\begin{listing}[!htbp]
+In the observe example, a recursive function with selective receive spawned as a new process is used to illustrate how notifications can be received and how observe can be cancelled. This is not the only way and unnecessary if being used within an OTP process where messages are processed one after another.
+
+\begin{listing}[H]
 \centering
 \begin{minted}
 [bgcolor=bg,

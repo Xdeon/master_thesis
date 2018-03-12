@@ -2316,6 +2316,14 @@
     <bcf:citekey order="173">coap_protocol</bcf:citekey>
     <bcf:citekey order="174">kovatsch2015scalable</bcf:citekey>
     <bcf:citekey order="175">coap_observe</bcf:citekey>
+    <bcf:citekey order="176">kovatsch2015scalable</bcf:citekey>
+    <bcf:citekey order="178">lwm2m</bcf:citekey>
+    <bcf:citekey order="181">kovatsch2015scalable</bcf:citekey>
+    <bcf:citekey order="183">aws_instance</bcf:citekey>
+    <bcf:citekey order="184">lanter2013scalability</bcf:citekey>
+    <bcf:citekey order="185">kovatsch2014californium</bcf:citekey>
+    <bcf:citekey order="186">kovatsch2015scalable</bcf:citekey>
+    <bcf:citekey order="188">raspberry_pi</bcf:citekey>
   </bcf:section>
   <bcf:sortlist section="0" name="nty/global/" type="entry" sortscheme="nty" sortnamekeyscheme="global" labelprefix="">
   <bcf:sorting>

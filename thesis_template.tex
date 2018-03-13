@@ -27,12 +27,6 @@
 
 \definecolor{bg}{rgb}{0.95,0.95,0.95}
 
-%\usepackage{listings}
-
-\DeclareRobustCommand\nocite[1]{%
-    {\def\cite##1{\ignorespaces}#1}}
-\newcommand\nocitecaption[1]{\caption[\nocite{#1}]{#1}}
-
 \usepackage[style=trad-plain]{biblatex}
 
 \addbibresource{/Users/wilbur/Documents/Usask/PapersAndReferences/references.bib}
@@ -64,7 +58,7 @@
 
 % THESIS DEFENCE DATE
 % Should be month/year, e.g. July 2004
-\defencedate{December/2017}
+\defencedate{March/2018}
 
 
 % NAME OF ACADEMIC UNIT
@@ -104,13 +98,13 @@
 
 % ABSTRACT
 \abstract{
-This is the abstract of my thesis.  
+The Internet of Things (IoT) can be seen as a large scale network of billions of smart devices. Often IoT devices exchange data in small but numerous messages, which requires IoT services to be more scalable and reliable than existing Web services. Traditional protocols that are known in Web world does not fit well in constrained environment that these devices operate in. Therefore many lightweight protocols specialized for the IoT have been studied, among which the Constrained Application Protocol (CoAP) stands out for its well-known REST paradigm and easy integration with existing Web. On the other hand, new paradigms such as Fog Computing emerges, attempting to avoid centralized bottleneck in IoT services by moving computations to the edge of the network. Since a node of the fog essentially belongs to a relatively constrained environment, CoAP fits in well. Among the many attempts of building scalable and reliable systems, Erlang as a typical concurrency-oriented programming (COP) has been battle tested in telecom industry, which has similar requirements as the IoT. In order to explore the possibility of applying Erlang and COP in general to the IoT, this thesis presents an Erlang based CoAP server/client prototype ecoap with a flexible concurrency model that can scale up to unconstrained environment like the cloud and scale down to constrained environment like an embedded platform. The flexibility of the presented server renders the same architecture applicable from  fog to cloud. To evaluate its performance, the proposed server is compared with the mainstream CoAP implementation on a Amazon Web Service (AWS) cloud instance and a Raspberry Pi 3, representing the unconstrained and constrained environment respectively. The ecoap server achieves similar level of throughput as the other implementation in the cloud while outperforms it on the Raspberry Pi. It also shows in general better latency. The thesis yields positive results and demonstrates the value of the philosophy of Erlang in the IoT space.
 }
 
 % THESIS ACKNOWLEDGEMENTS -- This can be free-form.
-\acknowledgements{
-Acknowledgements go here.  Typically you would at least thank your supervisor.
-}
+%\acknowledgements{
+%I would express my gratitude to my supervisor Dr. Ralph. 
+%}
 
 % THESIS DEDICATION -- Also free-form.  If you don't want a dedication, comment out the following
 % line.
@@ -119,25 +113,35 @@ Acknowledgements go here.  Typically you would at least thank your supervisor.
 % LIST OF ABBREVIATIONS - Sample  
 % If you don't want a list of abbreviations, comment the following 4 lines.
 \loa{
+\abbrev{AWS}{Amazon Web Sevice}
+\abbrev{API}{Application Programming Interface}
+\abbrev{BLE}{Bluetooth Low Energy}
 \abbrev{CoAP}{Constrained Application Protocol}
 \abbrev{CoRE}{Constrained RESTful environments}
-\abbrev{CSP}{Communicating Sequential Processes}
+\abbrev{CON}{Confirmable}
 \abbrev{DDS}{Data Distribution Service}
-\abbrev{DETS}{Disk Erlang Term Storage}
 \abbrev{DICE}{DTLS In Constrained Environments}
 \abbrev{DTLS}{Datagram Transport Layer Security}
 \abbrev{HTTP}{Hypertext Transfer Protocol}
 \abbrev{IETF}{Internet Engineering Task Force}
 \abbrev{IoT}{Internet of Things}
+\abbrev{JVM}{Java Virtual Machine}
+\abbrev{LWM2M}{OMA Lightweight M2M}
 \abbrev{M2M}{machine-to-machine}
+\abbrev{MID}{message identifier}
 \abbrev{MQTT}{Message Queue Telemetry Transport}
 \abbrev{NAT}{Network Address Translation}
+\abbrev{NON}{Non-confirmable}
 \abbrev{REST}{Representative State Transfer}
+\abbrev{RST}{Reset}
 \abbrev{OTP}{Open Telecom Platform}
+\abbrev{OMA}{Open Mobile Alliance}
+\abbrev{PID}{process identifier}
 \abbrev{RTPS}{Real-Time Publish-Subscribe}
 \abbrev{TCP}{Transmission Control Protocol}
 \abbrev{TLS}{Transport Layer Security}
 \abbrev{UDP}{User Datagram Protocol}
+\abbrev{VM}{virtual machine}
 %\abbrev{LOF}{List of Figures}
 %\abbrev{LOT}{List of Tables}
 }
@@ -215,16 +219,16 @@ Acknowledgements go here.  Typically you would at least thank your supervisor.
 
 % Put appendix chapters in the appendices environment so that they appear correcty
 % in the table of contents.  You can use \input's here as well.
-\begin{appendices}
+%\begin{appendices}
 
-\chapter{Sample Appendix}
+%\chapter{Sample Appendix}
 
-Stuff for this appendix goes here.
+%Stuff for this appendix goes here.
 
-\chapter{Another Sample Appendix}
+%\chapter{Another Sample Appendix}
 
-Stuff for this appendix goes here.
+%Stuff for this appendix goes here.
 
-\end{appendices}
+%\end{appendices}
 
 \end{document}

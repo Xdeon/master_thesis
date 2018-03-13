@@ -11,7 +11,7 @@ Over the past decade, an important trend is moving computing, control, and data 
 \begin{figure}[!htbp]
 \centering
 \includegraphics[scale = 0.55]{fog_computing.png}
-\caption{The role of the Cloud and Fog play in the delivery of IoT services. \cite{7123563}} 
+\caption[The role of the Cloud and Fog play in the delivery of IoT services]{The role of the Cloud and Fog play in the delivery of IoT services. \cite{7123563}} 
 \label{fig:fog_computing}
 \end{figure}
 
@@ -73,7 +73,7 @@ An experimental evaluation of two implementations of DDS \cite{4536566} points o
 
 IoT applications usually consist of myriads of devices that have minimal unit costs, which means they are constrained in power supply, available memory footprint, processing capabilities and much more. These constrained devices can surely benefit from a connection to the Internet as they can be integrated into distributed services. The Internet Engineering Task Force (IETF) has already undertaken much standardization work to make it happen. The IPv6 over Low-Power Wireless Area Networks (6LoWPAN) standards (RFCs 4944 and 6282) now enable IPv6 even on very constrained networks, which allows for seamless integration of sensor and actuator nodes into the Internet \cite{6159216}. 
 
-For full convergence, however, devices and services must also interoperate at the application layer \cite{kovatsch2014californium}. When it comes to mashing up of different services, the World Wide Web has proven its scalability and flexibility. Many applications today depend on the Web architecture, using HTTP to access information and perform updates. HTTP over TCP has problems in constrained environment, though, not only because its overhead in implementation code space, but also low network resource usage due to the fact that high packet error rates and lossy links are common in  constrained networks. To come over such a gap, the IETF designed a new Web protocol from scratch, the Constrained Application Protocol (CoAP). 
+For full convergence, however, devices and services must also interoperate at the application layer \cite{kovatsch2014californium}. When it comes to mashing up of different services, the World Wide Web has proven its scalability and flexibility. Many applications today depend on the Web architecture, using HTTP to access information and perform updates. HTTP over TCP has problems in constrained environment, though, not only because its overhead in implementation code space, but also low network resource usage due to the fact that high packet error rates and lossy links are common in constrained networks \cite{6159216}. To come over such a gap, the IETF designed a new Web protocol from scratch, the Constrained Application Protocol (CoAP). 
 
 CoAP follows the Representational State Transfer (REST) \cite{fielding2000architectural} like HTTP, but is tailored to the requirements of constrained devices and networks. A compact binary format is employed and the protocol runs over UDP (or Datagram Transport Layer Security (DTLS) when security is enabled). A messaging sub-layer provides duplicate detection and optional reliable delivery of messages, based on a simple stop-and-wait mechanism for retransmissions. On top of it, the request/response sub-layer enables RESTful interaction with the web in a similar fashion as HTTP \cite{kovatsch2014californium}. That being said, CoAP is primarily based on patterns from the Web: a client/server interaction model between application endpoints, resources that are addressable by Uniform Resource Identifiers (URIs), stateless exchange of representations that decouple client and server, uniform interfaces with standardized Internet Media Types for wide interoperability, and caching and proxying to enable high scalability \cite{kovatsch2015scalable}. 
 
@@ -213,7 +213,7 @@ A key feature for the IoT is observing resources. The observe extension enables 
 \begin{figure}[!htbp]
 \centering
 \includegraphics[scale = 0.55]{coap_observe.png}
-\nocitecaption{CoAP observe synchronizes the local state with the resource state at the origin server by sending push notifications. \cite{coap_observe}}
+\caption[CoAP observe synchronization]{CoAP observe synchronizes the local state with the resource state at the origin server by sending push notifications. \cite{coap_observe}}
 \label{fig:coap_observe}
 \end{figure}
 
@@ -315,7 +315,7 @@ David & Ruby & RFC & Unconstrained & Yes & - \\
 Copper & JavaScript & RFC & Web Browser & - & -
 \end{tabular}
 \captionsetup{format=hang}
-\caption{Brief summary and comparison of major CoAP implementations. Target environment ranges from very constrained to unconstrained, which covers sensors, more powerful embedded systems and cloud backends. - implies not applicable or not mentioned clearly.}
+\caption[Brief summary and comparison of major CoAP implementations]{Brief summary and comparison of major CoAP implementations. Target environment ranges from very constrained to unconstrained, which covers sensors, more powerful embedded systems and cloud backends. - implies not applicable or not mentioned clearly.}
 \label{tab:coap_imp_compare}
 \end{table}
 

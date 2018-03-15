@@ -24,7 +24,7 @@ Erlang itself is no silver bullet. It is particularly inappropriate to use Erlan
 
 \section{Concurrency Model}
 
-The popular Java CoAP server/client framework Californium was inspired by previous work for highly concurrent Internet services, in particular SEDA and the PIPELINED architecture \cite{lanter2013scalability}\cite{kovatsch2015scalable}. However, much of its assumption is invalid in a concurrency-oriented language context, since creation and synchronization of lightweight processes is much cheaper. Therefore, a more intuitive and straight forward architecture like Multi-Process (MP) is still an attractive option. The primary goal of the design is to allow scalability and fault-tolerance following the idiomatic concurrency-oriented language way, that is, isolation of processing, data and faults. 
+The popular Java CoAP framework Californium was inspired by previous work for highly concurrent Internet services, in particular SEDA and the PIPELINED architecture \cite{lanter2013scalability}\cite{kovatsch2015scalable}. However, much of its assumption is invalid in a concurrency-oriented language context, since creation and synchronization of lightweight processes is much cheaper. Therefore, a more intuitive and straight forward architecture like Multi-Process (MP) is still an attractive option. The primary goal of the design is to allow scalability and fault-tolerance following the idiomatic concurrency-oriented language way, that is, isolation of processing, data and faults. 
 
 \begin{figure}[!htbp]
 \centering

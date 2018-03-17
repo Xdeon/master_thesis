@@ -259,9 +259,18 @@ Previous sections explain the architecture of ecoap and how the different parts 
 
 \subsection{Process Overview}
 
-Erlang provides the Open Telecom Platform (OTP) framework, which generalizes common design patterns into a set of libraries and export them through Erlang behaviours. Behaviours are formalizations of these common patterns which divide the code of a process into a generic part (a behaviour module) and a specific part (a callback module). The OTP offers a bunch of basic behaviours such as supervisors, finite state machines, event managers and generic servers. One can then use the behaviour by implementing a cusomized callback module which exports a set of pre-defined callback functions, much like an interface implementation in a OOP context. The OTP and behaviours reduce the complexity in terms of code, testing, maintenance and understanding. ecoap is built all based on OTP behaviours. Besides all supervisor processes, which are obviously implementation of the \verb|supervisor| behaviour, the socket manager, endpoint and handler are all using the generic server, namely \verb|gen_server|, behaviour. While these components might be more efficient if written without using behaviours, it is considered the increased efficiency does not compensate the lost generality in this work. On the other hand, following the spirit of OTP, ecoap provides its own behaviour as well. One can implement customized resource handler logic by implementing the \verb|ecoap_handler| behaviour, where callback functions for REST verbs and CoAP observe are defined in a consistent manner, as shown in section \ref{api_example}.
+Erlang provides the Open Telecom Platform (OTP) framework, which generalizes common design patterns into a set of libraries and export them through Erlang behaviours. Behaviours are formalizations of these common patterns which divide the code of a process into a generic part (a behaviour module) and a specific part (a callback module). The OTP offers a bunch of basic behaviours such as supervisors, finite state machines, event managers and generic servers. One can then use the behaviour by implementing a cusomized callback module which exports a set of pre-defined callback functions, much like an interface implementation in a OOP context. The OTP and behaviours reduce the complexity in terms of code, testing, maintenance and understanding. ecoap is built all based on OTP behaviours. Besides all supervisor processes, which are obviously implementations of the \verb|supervisor| behaviour, the socket manager, endpoint and handler are all using the generic server, namely \verb|gen_server| behaviour. While these components might be more efficient if written without using behaviours, it is considered the increased efficiency does not compensate the lost generality in this work. On the other hand, following the spirit of OTP, ecoap provides its own behaviour as well. One can implement customized resource handler logic by implementing the \verb|ecoap_handler| behaviour, where callback functions for REST verbs and CoAP observe are defined in a consistent manner, as shown in section \ref{api_example}.
 
 The socket manager, endpoint and handler processes make most communications in an asynchronous manner using one way \verb|gen_server| cast or direct message passing in order to avoid unnecessary blocking operations. For example, when the socket manager delivers a CoAP message to corresponding endpoint process, it does not care about the result of this operation and a blocking \verb|gen_server| call serves no purpose here. In case of a process crash, the delivery can safely fail because related processes will be terminated or restarted anyway. The above also applies to the communication between the endpoint process and the \verb|ecoap_handler| process. The only exceptions are with \verb|ecoap_client| process and the server registry, as the former has to provide meaningful results to the client while the latter must ensure an operation such as registering a routing entry be a deterministic and atomic operation to avoid race conditions. The client functions are therefore \verb|gen_server| calls under the hood, which will bring down the caller if a failure happens, a usual behaviour in many Erlang applications. All communication details are hidden by wrapping the casts/message passing in proper client functions though, so that further changes that are internal to the process can be made smoothly. 
+
+Figure \ref{fig:ecoap_process_view} shows the supervision tree of a running ecoap example server through \textit{Observer}, the graphical tool of Erlang which displays system and process information. The example consists of three active clients where one of the clients has established an observe relation towards certain resource hosted by the server. 
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[scale = 0.6]{ecoap_process_view}
+\caption[Process view of an example server]{The figure shows the process view of an example server. Process \textit{<0.125.0>},  \textit{<0.129.0>} and \textit{<0.133.0>} are endpoint processes representing three active clients. Among them the client for process \textit{<0.133.0>} has established an observe relation, which is handled by the handler process \textit{<0.135.0>}.}
+\label{fig:ecoap_process_view}
+\end{figure}
 
 \subsection{Message}
 
@@ -362,11 +371,11 @@ linenos=true]
 -behaviour(ecoap_handler).
 
 start() ->
+    % necessary when being started directly within Erlang shell
     {ok, _} = application:ensure_all_started(ecoap),
     % maps /HelloWorld/* to the module that implements ecoap_handler behaviour
-    ok = ecoap_registry:register_handler([
-            {[<<"HelloWorld">>], ?MODULE}  % ?MODULE refers to current module
-    ]).
+    Routes = [{[<<"HelloWorld">>], ?MODULE}],  % ?MODULE refers to current module      
+    {ok, _} = ecoap:start_udp([{port, 5683}], #{routes => Routes}).  
 
 stop() ->
     application:stop(ecoap).
@@ -477,7 +486,7 @@ ok = ecoap_client:close(Client).
 
 In the observe example, a recursive function with selective receive spawned as a new process is used to illustrate how notifications can be received and how observe can be cancelled. This is not the only way and unnecessary if being used within an OTP process where messages are processed one after another.
 
-\begin{listing}[H]
+\begin{listing}[!htbp]
 \centering
 \begin{minted}
 [bgcolor=bg,

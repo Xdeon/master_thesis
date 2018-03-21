@@ -7,4 +7,5 @@
 *.out
 *.gz
 *.toc
+/thesis_template.pdf
 _minted-thesis_template

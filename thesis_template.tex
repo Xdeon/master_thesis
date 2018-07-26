@@ -7,8 +7,6 @@
 
 \usepackage{subcaption}
 
-\usepackage{hyperref}
-
 \usepackage{enumitem}
 
 \usepackage{tabularx}
@@ -19,7 +17,7 @@
 
 \usepackage[T1]{fontenc}
 
-\usepackage[cache=false]{minted}
+\usepackage{minted}
 
 \usemintedstyle{default}
 
@@ -37,6 +35,12 @@
 \addbibresource{/Users/wilbur/Documents/Usask/PapersAndReferences/references.bib}
 
 \DeclareFieldFormat{titlecase}{#1}
+
+\usepackage{hyperref}
+
+\renewcommand{\chapterautorefname}{Chapter}
+
+\providecommand*{\listingautorefname}{Listing}
 
 % Documentation for the uofsthesis-cs class is given in uofsthesis-cs.dvi
 % 

@@ -53,11 +53,11 @@
       <file>blx-dm.def</file>
       <file>blx-compat.def</file>
       <file>biblatex.def</file>
-      <file>trad-plain.bbx</file>
-      <file>trad-standard.bbx</file>
       <file>standard.bbx</file>
-      <file>trad-plain.cbx</file>
+      <file>trad-standard.bbx</file>
+      <file>trad-plain.bbx</file>
       <file>numeric.cbx</file>
+      <file>trad-plain.cbx</file>
       <file>biblatex.cfg</file>
       <file>english.lbx</file>
     </requires>

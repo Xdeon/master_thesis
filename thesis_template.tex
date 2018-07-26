@@ -1,3 +1,6 @@
+% !BIB TS-program = biber
+% !BIB program = biber
+
 \documentclass{uofsthesis-cs}
 
 \usepackage{graphicx}
@@ -16,20 +19,20 @@
 
 \usepackage[T1]{fontenc}
 
-\usepackage{minted}
+\usepackage[cache=false]{minted}
+
+\usemintedstyle{default}
 
 %\usepackage{xpatch,letltxmacro}
 %\LetLtxMacro{\cminted}{\minted}
 %\let\endcminted\endminted
 %\xpretocmd{\cminted}{\RecustomVerbatimEnvironment{Verbatim}{BVerbatim}{}}{}{}
 
-\usemintedstyle{default}
-
 \usepackage{xcolor}
 
 \definecolor{bg}{rgb}{0.95,0.95,0.95}
 
-\usepackage[style=trad-plain]{biblatex}
+\usepackage[backend=biber, style=trad-plain]{biblatex}
 
 \addbibresource{/Users/wilbur/Documents/Usask/PapersAndReferences/references.bib}
 
@@ -60,7 +63,7 @@
 
 % THESIS DEFENCE DATE
 % Should be month/year, e.g. July 2004
-\defencedate{March/2018}
+\defencedate{April/2018}
 
 
 % NAME OF ACADEMIC UNIT
@@ -210,7 +213,9 @@ The Internet of Things (IoT) can be seen as a large scale network of billions of
 
 \uofsbibliographynobibtex
 
-\setlength\bibitemsep{0.5\baselineskip}
+%\setlength\bibitemsep{0.5\baselineskip}
+\setlength\bibitemsep{2\itemsep}
+
 \printbibliography
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

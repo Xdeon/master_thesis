@@ -79,9 +79,9 @@ As shown in \autoref{fig:coap_endpoint} and \autoref{fig:coap_endpoint_inner}, t
 
 The work flow can be briefly described as follows. After receiving the incoming datagram, the endpoint process checks duplication first and triggers corresponding actions upon the exchange state if it is a duplicate. Otherwise, a new state is initiated where the CoAP message is decoded into ecoap's inner presentation and handed to appropriate handler process for further processing. After the handler process finishes its task, it passes the result back to the \verb|ecoap_endpoint| process which then  triggers a state transition where actions including encoding the result and sending it over the network are executed.
 
-The \verb|ecoap_endpoint| process sets a one-way monitor on every handler process so that it can be notified when they terminate (either a clean finish or a crash). A counter of currently running handler processes is maintained by the endpoint process. This has an important impact on the lifespan of an endpoint process, which will be discussed later in \autoref{state_management}. 
+The \verb|ecoap_endpoint| process sets a one-way monitor on every handler process so that it can be notified when they terminate (either a clean finish or a crash). This has an important impact on the lifespan of an endpoint process, which will be discussed later in \autoref{state_management}. 
 
-The \verb|ecoap_endpoint| process also manages CoAP message identifiers and tokens when it needs to issue a CoAP message proactively, i.e. being a client or sending a non-confirmable/separate response as a server. The message identifier, or MID, is generated sequentially starting from a random number within the MID range, but independent among different \verb|ecoap_endpoint| processes. The share-nothing of Erlang renders MID management straight forward since there is no concern of collision out the scope of a single CoAP endpoint. Within one endpoint one should still make sure that a MID is not reused before corresponding exchange lifetime ends. On the other hand, the message token is generated as a strong random bytes using Erlang's crypto library with configurable length. Tokens are also only produced by  \verb|ecoap_endpoint| process independently. One could argue that randomly generating token does not fit in a variety scenarios. However, using crypto strong random bytes as token under one endpoint's scope greatly simplifies the effort to synchronize and avoids collision to a relatively high level, which is enough for the ecoap prototype.
+The \verb|ecoap_endpoint| process also manages CoAP message identifiers and tokens when it needs to issue a CoAP message proactively, i.e. being a client or sending a non-confirmable/separate response as a server. The message identifier, or MID, is generated sequentially starting from a random number within the MID range, but independent among different \verb|ecoap_endpoint| processes. The share-nothing of Erlang renders MID management straight forward since there is no concern of collision out the scope of a single CoAP endpoint. Within one endpoint one should still make sure that a MID is not reused before corresponding exchange lifetime ends. The message token is generated as a strong random bytes using Erlang's crypto library with configurable length. Tokens are also only produced by \verb|ecoap_endpoint| process independently. One could argue that randomly generating token does not fit in a variety of scenarios. However, using crypto strong random bytes as token within one endpoint's scope greatly simplifies the effort for synchronization and avoids collision to a relatively high level, which is enough for the ecoap prototype. While MID is stored as an integer, the endpoint process stores the token in a key-value store which maps request token to the identifier of the request issuer. The token store is necessary for matching incoming responses to requests and dispatching them to corresponding issuers.
 
 \subsection{Handler}\label{coap_handler}
 
@@ -98,7 +98,7 @@ An \verb|ecoap_handler| process is used to execute server-side logic, including 
 \label{fig:ecoap_handler}
 \end{figure}
 
-A CoAP resource provides a RESTful interface and can be accessed and modified through reacting to requests that carry one of the four request codes defined in CoAP: GET, POST, PUT, or DELETE. One can define a CoAP resource by implementing its handler functions as callbacks required by \verb|ecoap_handler|, which is similar to an interface in object-oriented programming, and register the mapping of resource URI to the module name of the handler functions at the CoAP Registry. When a request arrives at the server, eventually a \verb|ecoap_handler| process searches the registry for a resource that corresponds to the destination URI of the request. If the \verb|ecoap_handler| process finds the resource, the handler functions are executed to process the request and responds with an appropriate response code, options and payload according to the protocol specification, otherwise a 4.04 (Not Found) error code is responded. The assembled response is then passed back to corresponding \verb|ecoap_endpoint| process which sends it to the client. 
+A CoAP resource provides a RESTful interface and can be accessed and modified through reacting to requests that carry one of the four request codes defined in CoAP: GET, POST, PUT, or DELETE. One can define a CoAP resource by implementing its handler functions as callbacks required by \verb|ecoap_handler|, which is similar to an interface in object-oriented programming, and register the mapping of resource URI to the module name of the handler functions at the CoAP Registry. When a request arrives at the server, eventually a \verb|ecoap_handler| process searches the registry for a resource that corresponds to the destination URI of the request. If the \verb|ecoap_handler| process finds the resource, the handler functions are executed to process the request and responds with an appropriate response code, options and payload according to the protocol specification, otherwise a 4.04 (Not Found) error code is responded. The assembled response is then passed back to corresponding \verb|ecoap_endpoint| process which sends it to the client via the network. 
 
 The \verb|ecoap_handler| process is spawned by the \verb|ecoap_endpoint| process on demand and on the fly. For any ordinary request, there is usually one \verb|ecoap_handler| process per request, and the process terminates immediately after sending the response. No  bookkeeping work other than monitoring is taken by the corresponding \verb|ecoap_endpoint| process. As a result, requests can be processed concurrently in an intuitive, sequential and blocking fashion. It should ease programming effort especially when the resource handler has to execute certain time-consuming task as it does not need to worry slowing down the server. The Erlang runtime scheduler will make sure all processes share the time slot fairly. If the request has to be responded timely, for instance, a confirmable request, its corresponding message exchange state machine will sets a timer while waiting for the \verb|ecoap_handler| process, so that an empty acknowledgement can be delivered to the client if the handler process fails to finish before time out event. The late result automatically becomes a separate response that is included in a new message exchange. 
 
@@ -116,13 +116,13 @@ Different from ordinary request calls, synchronous and asynchronous observe call
 
 The \verb|ecoap_client| process also handles block-wise transfer in an atomic fashion, where the response is handed to user process only after the whole exchange completes. Concurrent block-wise transfer is an undefined behaviour \autocite{blockwise}. The \verb|ecoap_client| process deals with this by abandoning the ongoing block-wise exchange and continuing with the newly established one, which is essentially an overwrite and a desired result in many cases.
 
-Multiple user processes can share one \verb|ecoap_client| process since each request/response/observe/block-wise transfer tracking is self-contained and will not interrupt with each other. All tracking data are stored in a key-value store as part of the process inner state, providing fast reads and writes.
-
 Moreover, one can use the reference obtained from an asynchronous call to cancel the issued request before the corresponding response is received. If the reference is from an observe call, the observe relation is cancelled in a reactive way, where the next notification from the server will be rejected by sending a reset message. Any ongoing block-wise transfer corresponding to the request is stopped immediately after invoking request cancel call. This is done by turning ongoing block-wise message exchange to a cancelled state where further events such as message retransmission are just ignored.
+
+Multiple user processes can share one \verb|ecoap_client| process since each request/response/observe/block-wise transfer tracking is self-contained and will not interrupt with each other. All tracking data are stored in a key-value store as part of the process inner state, providing fast reads and writes. 
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[scale = 0.55]{ecoap_client_standalone}
+\includegraphics[scale = 0.7]{ecoap_client_standalone}
 \caption[Structure of a standalone client]{Structure of a standalone client. The ecoap\_client process only uses message passing to ask the socket manager to start corresponding endpoint process.}
 \label{fig:ecoap_client_standalone}
 \end{figure}
@@ -131,14 +131,14 @@ A client can be started as a standalone one or an embedded one. As a standalone 
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[scale = 0.55]{ecoap_client_embedded}
-\caption{Structure of an embedded client}
+\includegraphics[scale = 0.7]{ecoap_client_embedded}
+\caption[Structure of an embedded client]{Structure of an embedded client. The ecoap\_client process is not directly involved in the server but asks the server to send request on behalf of it, so that client and server can share the same network interface.}
 \label{fig:ecoap_client_embedded}
 \end{figure}
 
-While an embedded client uses existing socket manager instead of spawning one. This can be useful when an application wants to behave as server and client at the same time while sharing the single network interface, like the behaviour defined in OMA Lightweight M2M (LWM2M) \autocite{lwm2m}, an IoT device management protocol built atop CoAP. For instance, an \verb|ecoap_client| process can be started and specified to use the same socket manager of a running ecoap server. Then when issuing a request, the newly created \verb|ecoap_endpoint| process will be connected to the supervision tree of the server, and the very \verb|ecoap_endpoint| process will be used for both client role and server role which avoids duplication and confusion of states within the application. Last but not least, depending on the requirement of the application, the \verb|ecoap_client| could be started either during the initialization of the server or inside a resource handler function.
+While an embedded client uses existing socket manager instead of spawning one. This can be useful when an application wants to behave as server and client at the same time while sharing the single network interface, like the behaviour defined in OMA Lightweight M2M (LWM2M) \autocite{lwm2m}, an IoT device management protocol built atop CoAP. For instance, an \verb|ecoap_client| process can be started and specified to use the same socket manager of a running ecoap server. Then when issuing a request, the newly created \verb|ecoap_endpoint| process will be connected to the supervision tree of the server, and the very \verb|ecoap_endpoint| process will be used for both client role and server role which avoids duplication and confusion of states within the application. Also, depending on the requirement of the application, the \verb|ecoap_client| could be started either during the initialization of the server or inside a resource handler function.
 
-Besides the state and lifespan management that will be discussed in \autoref{state_management} later, the endpoint process monitors the \verb|ecoap_client| process for another purpose. Assume in the embedded mode an \verb|ecoap_client| process exits due to any reason, the endpoint has to cancel all ongoing message exchanges that the client originated. The endpoint uses the monitor to track this extra information. It is inappropriate to let the endpoint process terminate with the client process as what would happen in a standalone client, because the endpoint process might be used by other client processes or by the server concurrently. In the standalone mode, termination of an \verb|ecoap_client| process will shutdown the socket manager and all alive endpoint processes anyway, no matter the termination is normal or a crash. The monitor is more for a consistent reason other than the purpose stated above.
+The endpoint process monitors the \verb|ecoap_client| process for a special purpose. Assume in the embedded mode an \verb|ecoap_client| process exits due to any reason, the endpoint has to cancel all ongoing message exchanges that the client originated. The endpoint uses the monitor to track this extra information. It is inappropriate to let the endpoint process terminate with the client process as what would happen in a standalone client, because the endpoint process might be used by the server concurrently. In the standalone mode, termination of an \verb|ecoap_client| process will shutdown the socket manager and all alive endpoint processes anyway, no matter the termination is normal or a crash. The monitor is more for a consistent reason other than the purpose stated above. On the other hand, since socket manager is not started by the client process in the embedded mode, there is no direct link between them. Therefore the \verb|ecoap_client| process should monitor the socket manager instead in case it terminates unexpectedly.
 
 The \verb|ecoap_handler| and \verb|ecoap_client| process both work as the handlers that provide interface to business logic. They can both be considered as request/response layer of CoAP. The main difference is they are connected in different ways to the corresponding CoAP endpoint component and supervision strategy varies. This is because server and client have reversed data flow, where the \verb|ecoap_handler| process is the end of request processing in a server while the \verb|ecoap_client| process is the one that begins a request.
 
@@ -150,7 +150,7 @@ The routing rules are stored in an Erlang Term Storage (ETS), which is an effici
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[scale = 0.55]{coap_registry}
+\includegraphics[scale = 0.7]{coap_registry}
 \caption[Supervision tree of the server registry]{Supervision tree of the server registry. The routing ETS table is owned by the supervisor. The ecoap\_registry process serialize all writes to the table including insert and delete. Many ecoap\_handler processes can read from the table concurrently. Reads and writes are direct function call without accumulated messages in a single process.}
 \label{fig:coap_registry}
 \end{figure}
@@ -215,7 +215,7 @@ With the forementioned guide in mind, the supervision tree of ecoap is shown in 
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[scale = 0.55]{system_arch_vertical}
+\includegraphics[scale = 0.7]{system_arch_vertical}
 \caption{Supervision tree of ecoap as server}
 \label{fig:system_arch}
 \end{figure}
@@ -252,7 +252,7 @@ In summary, influence of a crash is limited as much as possible to avoid cascade
 
 \subsection{State Management}\label{state_management}
 
-\subsubsection{Deduplication States}
+\subsubsection{Deduplication States and Lifespan of Endpoint}
 
 A CoAP endpoint might receive the same message multiple times. Two messages are equal, if their sources, destinations, and MIDs are the same within the same lifetime \autocite{lanter2013scalability}. It is required that a CoAP endpoint remembers confirmable messages for a EXCHANGE LIFETIME (247 seconds) and non-confirmable messages for an NON LIFETIME (147 seconds) \autocite{coap_protocol}. When a duplicate message arrives the server should respond with the same response without re-executing the request (at-most-once semantics). Thus a CoAP endpoint have to cache the response for transmission, along with the request information for filtering. The potential large amount of ongoing requests and the memory they cost require the server to reduce the exchange states and drop them after finishing the requests as soon as possible. 
 
@@ -260,17 +260,20 @@ It is decided that each \verb|ecoap_endpoint| process should maintain a key-valu
 
 It should be noticed that CoAP server can further relax deduplication \autocite{coap_protocol}. First of all, NON requests are less critical as their lifetime is shorter and the semantics indicate their unreliability: they can be designed so that no response needs to be cached and only duplicate filtering is needed. Furthermore, when processing only idempotent requests such as GET, PUT, and DELETE, no responses have to be cached and ecoap can be configured to completely disable deduplication. For computation intensive resources, results can be cached locally. On the other hand, POST requests can be optimized using application knowledge to implement a more efficient deduplication strategy. 
 
-It is also important to determine when a remote endpoint is not active anymore, so that the corresponding \verb|ecoap_endpoint| process can be safely shut down (with the sub supervision tree it links to) and resource being hold can be released. A remote endpoint is considered inactive when all of the past message exchanges have expired and no handler process is running. The conditions have to be all met because it is possible that the exchange map is empty while one or more handler processes are still running. For instance, when the client is observing a resource that is seldom updated or waiting for a separate response of a time-consuming task, there is a chance that no new messages arrive during the wait and all exchanges have expired. And the endpoint should not terminate in such a case. The endpoint process therefore monitors all alive handler processes and maintains a counter which records the number of them. It could then directly check whether the exchange map is empty and the counter is set back to zero right after each exchange cleanup. However, it is not enough to examine only the above when no deduplication is enabled or when message lifetime is configured to be strongly reduced. The endpoint process might falsely consider it is to terminate while there is still ongoing traffic on the way because the exchange map is emptied too fast. In order to avoid this situation, the process should also track whether any message has ever arrived between each cleanup, which can be easily implemented as a flag that keeps being set each time a message is received. As a result, an endpoint process could only safely terminate after a cleanup when the following items are all true,
+It is also important to determine when a remote endpoint is not active anymore, so that the corresponding \verb|ecoap_endpoint| process can be safely shut down (with the sub supervision tree it links to) and resource being hold can be released. A remote endpoint is considered inactive when all of the past message exchanges have expired, no outgoing request is left uncompleted, and no \verb|ecoap_handler| process is running. All the conditions have to be met at the same time because there are situations where ongoing exchanges exist but the exchange store is empty. For example, when a client is observing a resource that is seldom updated, or waiting for a separate response of a time-consuming task, there is a chance that no new message ever arrives during the wait and all exchanges have expired and been removed. Apparently the endpoint process should not terminate in such a case, be it either on client side or on server side. 
+
+On the one hand, in order to track outgoing requests, the endpoint process simply reuses its token store. Since the token store is cleaned up whenever a request is completed, checking whether it is empty is enough to make sure no request is left open. On the other hand, the endpoint process monitors all alive \verb|ecoap_handler| processes and maintains a counter which tracks the number of them. As a result, it could then directly check whether the corresponding stores are all empty as well as the counter is set back to zero right after each exchange store cleanup to determine if it should terminate or not. However, it is not enough to examine only the above conditions when no deduplication is enabled or when message lifetime is configured to be strongly reduced. The endpoint process might falsely consider it is about to terminate while there is still ongoing traffic on the way because the exchange store is emptied too fast. To avoid this situation, the process should also track whether any message has ever arrived between each cleanup, which can be easily implemented as a flag that keeps being set each time a message is received. To sum up, an endpoint process could only safely terminate after a cleanup on its exchange store when the following items are all true,
 
 \begin{itemize}
 
 \item The last message exchange has expired.
 \item The handler process counter is zero.
+\item No outgoing request is left uncompleted.
 \item No message has arrived between two cleanups. 
 
 \end{itemize}
 
-The three conditions are not valid in all cases, but any violation of them implies the remote endpoint may further communicate with the application and corresponding processes should be ready for that. The socket manager will be notified on termination of the endpoint process and remove its record from the dispatching table. The sub supervision tree where the endpoint process resides is automatically shut down as described in \autoref{supervision_tree}. 
+The four conditions are not valid in all cases, for example, the handler process counter is always zero for a client. But any violation of them implies the remote endpoint may further communicate with the application and corresponding processes should be ready for that. When an endpoint process does terminate, the socket manager will be notified on this event and remove its record from the dispatching table. The sub supervision tree where the endpoint process resides is automatically shut down as described in \autoref{supervision_tree}. 
 
 \subsubsection{Observe States}
 
@@ -475,6 +478,10 @@ In the example, the server is started with registered name \textit{hello\_server
 
 For clients, the \verb|ecoap_client| module exports necessary functions to access a remote server. The module can be used in a similar way as OTP \verb|gen_server|. One needs to call \verb|ecoap_client:open/{0,1,2}| to spawn and links to a \verb|ecoap_client| process and \verb|ecoap_client:close/1| to stop it. The optional arguments of the \verb|open| function can be used to specify the port to be bound or the socket process to be associated with as an embedded client, as well as other environment settings such as alternative transportation parameters of the protocol. Synchronous requests can be sent through \verb|ecoap_client:get/{2,3,4}|, \verb|ecoap_client:put/{3,4,5}|, \verb|ecoap_client:post/{3,4,5}| and \verb|ecoap_client:delete/{2,3,4}|. Optional arguments are for request payload, CoAP options and timeout value if needed. All the above functions have their asynchronous versions. Similarly, there is \verb|ecoap_client:observe/{2,3}| and \verb|ecoap_client:observe_and_wait_response/{2,3,4}|  as well as their unobserve counterparts. The only difference between the two is that the latter will block until the first notification or another valid response is returned from the server while the former is completely asynchronous. Since there are usually multiple versions of a function with different number of arguments, one can have more refined control over the requests. Finally, \verb|ecoap_client:cancel_request/2| can be used to cancel an asynchronous request and \verb|ecoap_client:flush/1| can get rid of unwanted messages caused a certain request or a certain \verb|ecoap_client| process from the process mailbox. 
 
+When the optional timeout argument is not given, a synchronous call blocks the caller until a valid response is delivered. If the server is unreachable and the maximum retry time has been reached, a timeout error value will be returned instead. When the optional timeout argument is given, the caller will crash if no response arrives within this period of time. For asynchronous calls, since the response are delivered as message, one can use either the \verb|receive| primitive in Erlang or let an OTP process handle it via its relevant callback function. 
+
+In the observe example, a recursive function with selective receive spawned as a new process is used to illustrate how notifications can be received and how observe can be cancelled. This is not the only way and unnecessary if being used within an OTP process where messages are processed one after another.
+
 \begin{listing}[!htbp]
 \centering
 \begin{minted}
@@ -513,8 +520,6 @@ example() ->
 \label{lst:sync_client_api}
 \end{listing}
 
-When the optional timeout argument is not given, a synchronous call blocks the caller until a valid response is delivered. If the server is unreachable and the maximum retry time has been reached, a timeout error value will be returned instead. When the optional timeout argument is given, the caller will crash if no response arrives within this period of time. For asynchronous calls, since the response are delivered as message, one can use either the \verb|receive| primitive in Erlang or let an OTP process handle it via its relevant callback function. 
-
 \begin{listing}[!htbp]
 \centering
 \begin{minted}
@@ -547,8 +552,6 @@ example() ->
 \caption{Asynchronous client API}
 \label{lst:async_client_api}
 \end{listing}
-
-In the observe example, a recursive function with selective receive spawned as a new process is used to illustrate how notifications can be received and how observe can be cancelled. This is not the only way and unnecessary if being used within an OTP process where messages are processed one after another.
 
 \begin{listing}[!htbp]
 \centering

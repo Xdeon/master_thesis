@@ -2,31 +2,43 @@
 
 %\section{Research Problem}
 
+% 1.definition of scalability
+% 2.To what extent could the same solution scales up and down while showing a consistent behaviour. - tune statement
+
 The main objective of this work is to answer the following question:
 
-\textit{How could we use typical COP language like Erlang to model scalable and reliable IoT infrastructure utilizing CoAP?}
+\textit{How could we use typical concurrency-oriented programming language like Erlang to model scalable and reliable IoT infrastructure utilizing CoAP?}
 
 Moreover, with Fog Computing paradigm in mind, when it comes to scalability, exploring how the same Erlang-based solution could \textit{scale down} to constrained environment such as single-board platform and \textit{scale up} to unconstrained environment such as cloud is another research interest here.
 
+The objective of the research can be further divided to following sub questions:
+
+\begin{itemize}
+
+\item How can The Constrained Application Protocol be implemented in the context of Erlang? 
+\item What architecture should be used to provide both scalability and reliability? 
+\item What interface should be provided to application developers for easy integration? 
+\item How can a benchmark tool be constructed to evaluate the implementation? 
+
+\end{itemize}
+
 Since scalability and reliability are the desired goals. They are specified in the scope of this work as following:
 
-\begin{enumerate}
+\begin{itemize}
 
-\item Scalability can refer to vertical scalability and horizontal scalability. It is particularly interesting to evaluate horizontal scalability in IoT scenarios, especially when Erlang comes into play, since it is also famous for its transparent distribution support. However, horizontal scalability is also heavily determined by application specific requirements, which makes it difficult to model and test generally. Therefore, for simplicity, only vertical scalability is considered in this work. It is measured by how many concurrent requests a system can handle on average under certain load. Thus concurrency and scalability are used interchangeably in this work.
+\item Scalability can refer to vertical scalability and horizontal scalability. % insert definition
+
+It is particularly interesting to evaluate horizontal scalability in IoT scenarios, especially when Erlang comes into play, since it is also famous for its transparent distribution support. However, horizontal scalability is also heavily determined by application specific requirements, which makes it difficult to model and test generally. Therefore, for simplicity, only vertical scalability is considered in this work. It is measured by how many concurrent requests a system can handle on average under certain load. Thus concurrency and scalability are used interchangeably in this work.
 
 \item Reliability can refer to many things. In this work, availability is more a research interest. It is measured by observing whether a system behaves as expected when random faults happen within any of its subsystems, so that the whole system remains available. This is sometimes also referred as fault-tolerance. Fault-tolerance and reliability are used interchangeably in this work.
 
-\end{enumerate}
+\end{itemize}
 
-As a summary, in a client-server model, a scalable and reliable server means it must be stable facing large number of concurrent clients/requests and behave as expected when faults occur. On the other hand, with Fog Computing paradigm in mind, the objective of the research can also be stated as building 
 
-\begin{enumerate}
 
-\item How can The Constrained Application Protocol be implemented in the context of Erlang? 
-\item What architecture should be used to provide both concurrency and fault-tolerance? 
-\item What interface should be given for potential application developers for easy integration? 
-\item How can a benchmark tool be constructed to evaluate the implementation? 
+As a summary, in a client-server model, a scalable and reliable server means it should fully utilize modern multi-core systems, deliver stable performance facing large number of concurrent clients/requests and behave as expected when faults occur.
 
-\end{enumerate}
+%On the other hand, with Fog Computing paradigm in mind, the objective of the research can also be stated as building 
+
 
 %\section{Challenges}

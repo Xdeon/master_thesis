@@ -228,16 +228,16 @@ It can be seen that the proposed server prototype has comparable performance in 
 
 It is interesting to see to what extend a solution could scale up and scale down when being targeted to platforms with great capability difference. Hence, a similar experiment is conducted in a more constrained environment, the Raspberry Pi 3 \autocite{raspberry_pi}. The Raspberry Pi is essentially an embedded computer which can run Linux compatible applications. It is never as constrained as sensors and low-power devices, however, such type of platforms are still widely used as gateways or local processing unit in many IoT applications. For instance, it is ideal for running a Fog node that encapsulates more dummy sensors and devices.
 
+The Raspberry Pi 3 is equipped with a quad-core 1.2GHz Broadcom BCM2837 64bit CPU, with 1GB RAM and BCM43438 wireless LAN and Bluetooth Low Energy (BLE) on board. The experiment environment consists of one Pi running the CoAP server and a MacBook Pro running the benchmark tool, connected via a Gigabyte network switch, as shown in \autoref{fig:experiment_setting_rasp}. It is considered the MacBook Pro is powerful enough to generate loads that can saturate the Pi. 
+
+The test measures the average throughput as well as the latency of each server under stress, starting with 1 client and stepwise increasing the concurrency level to 10,000. It is of little interest to explore the vertical scalability on such a constrained platform. Therefore the evaluation is done with a fixed number of CPU cores. All other settings including the server tweaking and socket buffer tuning are the same as the AWS experiment.
+
 \begin{figure}[!htbp]
 \centering
 \includegraphics[scale = 0.6]{experiment_setting_rasp}
 \caption{Experiment setup in constrained environment}
 \label{fig:experiment_setting_rasp}
 \end{figure}
-
-The Raspberry Pi 3 is equipped with a quad-core 1.2GHz Broadcom BCM2837 64bit CPU, with 1GB RAM and BCM43438 wireless LAN and Bluetooth Low Energy (BLE) on board. The experiment environment consists of one Pi running the CoAP server and a MacBook Pro running the benchmark tool, connected via a Gigabyte network switch, as shown in \autoref{fig:experiment_setting_rasp}. It is considered the MacBook Pro is powerful enough to generate loads that can saturate the Pi. 
-
-The test measures the average throughput as well as the latency of each server under stress, starting with 1 client and stepwise increasing the concurrency level to 10,000. It is of little interest to explore the vertical scalability on such a constrained platform. Therefore the evaluation is done with a fixed number of CPU cores. All other settings including the server tweaking and socket buffer tuning are the same as the AWS experiment.
 
 \begin{figure}[!htbp]
 \centering
@@ -303,14 +303,14 @@ Fault-tolerance is another design goal of ecoap. In order to verify the behaviou
 
 The experiment is conducted on an AWS m4.2xlarge instance with 8 vCPUs and 32 GB of RAM with other settings the same as the previous AWS tests. To evaluate how fault-tolerant ecoap is, the experiment first starts the server and the benchmark tool as normal, and then randomly kills a process of the server every 2 seconds during an ongoing stress test. The interval of 2 seconds is the minimum value that can be used respecting the restart limit of supervisors inside ecoap. The chaos monkey is smart enough to only kill worker processes because it is where the majority of errors happen, while the supervisors are too strong to kill. Usually the crash of a supervisor implies an unrecoverable error just occurred and the entire supervision tree is abandoned. 
 
+In such a way, the throughput of the server under ``attack" is shown in \autoref{fig:ecoap_faults_throughput}. It can be seen clearly that when the chaos monkey application is active, the standard deviation gets quite large at low concurrency level. This is because, with low concurrency factor, fewer processes run in the server and killing one of them every 2 seconds is considered a non-negligible obstacle. The server survives the attack but cannot run as stable as usual. Nevertheless, the situation gets better when more concurrent clients are involved, since a system with a larger amount of processes is naturally resilient to fixed rate failure. Therefore, the throughput gets closer to the one without any fault as the number of concurrent clients grows. 
+
 \begin{figure}[!htbp]
 \centering
-\includegraphics[scale=0.7]{ecoap_faults_throughput}
+\includegraphics[scale=0.65]{ecoap_faults_throughput}
 \caption[Throughput of ecoap with faults injected on an 8-core AWS instance]{Throughput of ecoap with faults injected on an 8-core AWS instance: The chaos monkey application randomly kill a worker process of ecoap every 2 seconds. The performance is more disturbed at low concurrency factor.}
 \label{fig:ecoap_faults_throughput}
 \end{figure}
-
-In such a way, the throughput of the server under ``attack" is shown in \autoref{fig:ecoap_faults_throughput}. It can be seen clearly that when the chaos monkey application is active, the standard deviation gets quite large at low concurrency level. This is because, with low concurrency factor, fewer processes run in the server and killing one of them every 2 seconds is considered a non-negligible obstacle. The server survives the attack but cannot run as stable as usual. Nevertheless, the situation gets better when more concurrent clients are involved, since a system with a larger amount of processes is naturally resilient to fixed rate failure. Therefore, the throughput gets closer to the one without any fault as the number of concurrent clients grows. 
 
 \begin{figure}[!htbp]
 \centering

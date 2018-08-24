@@ -685,6 +685,15 @@ Requests for permission to copy or to make other use of material in this thesis 
 \newpage
 \fi
 
+%LIST OF LISTINGS
+\ifx\nolistinglist\undefined
+\addcontentsline{toc}{chapter}{List of Listings}
+{\renewcommand{\baselinestretch}{1}\normalsize
+\listoflistings
+}
+\newpage
+\fi
+
 %LIST OF ABBREVIATIONS
 \ifx \@loa \@empty
 \relax

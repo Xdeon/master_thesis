@@ -7,38 +7,38 @@
 
 The main objective of this work is to answer the following question:
 
-\textit{How could we use typical concurrency-oriented programming language like Erlang to model scalable and reliable IoT infrastructure utilizing CoAP?}
+\textit{How could we use a typical concurrency-oriented programming language like Erlang to model scalable and reliable IoT infrastructure utilizing CoAP?}
 
-Moreover, with Fog Computing paradigm in mind, exploring how the same Erlang-based solution could \textit{scale down} to constrained environment such as single-board platform and \textit{scale up} to unconstrained environment such as cloud is another research interest here.
+Moreover, with Fog Computing paradigm in mind, exploring how the same Erlang-based solution could \textit{scale down} to a constrained environment such as single-board platform and \textit{scale up} to an unconstrained environment such as cloud is another research interest here.
 
-The objective of the research can be further divided to following sub questions:
+The objective of the research can be further divided to following sub-questions:
 
 \begin{itemize}
 
 \item How can the Constrained Application Protocol be implemented in the context of Erlang? 
-\item Following idiomatic Erlang design patterns, what architecture should the CoAP impelementation use to provide both scalability and reliability? 
+\item Following idiomatic Erlang design patterns, what architecture should the CoAP implementation use to provide both scalability and reliability? 
 \item What interface should be provided to application developers for easy integration? 
 \item How can a benchmark tool be constructed to evaluate the implementation? 
 
 \end{itemize}
 
-Since scalability and reliability are the desired goals. They are specified in the scope of this work as following:
+Since scalability and reliability are the desired goals. They are specified in the scope of this work as follows:
 
 \begin{itemize}
 
-\item Scalability is the ability of a system, network, or process to adapt itself to handle an growing amount of work \autocite{Bondi:2000:CSI:350391.350432}. A system is claimed to be scalable if it gains improvements in its performance under an increased load when more resources are added (typically hardware). When it comes to multiprocessor computing, measurements of scalability can be generally classified into two groups, horizontal scalability (or \textit{scaling out/in}) and vertical scalability (or \textit{scaling up/down}) \autocite{4228359}. Horizontal scalability refers to adding more nodes to (or removing nodes from) a system, such as adding a new computer in a distributed application. While vertical scalability means adding resources to (or removing resources from) a single node in a system, typically involving the addition of CPUs or memory capacity to a single computer. 
+\item Scalability is the ability of a system, network, or process to adapt itself to handle a growing amount of work \autocite{Bondi:2000:CSI:350391.350432}. A system is claimed to be scalable if it gains improvements in its performance under an increased load when more resources are added (typically hardware). When it comes to multiprocessor computing, measurements of scalability can be generally classified into two groups, horizontal scalability (or \textit{scaling out/in}) and vertical scalability (or \textit{scaling up/down}) \autocite{4228359}. Horizontal scalability refers to adding more nodes to (or removing nodes from) a system, such as adding a new computer in a distributed application. While vertical scalability means adding resources to (or removing resources from) a single node in a system, typically involving the addition of CPUs or memory capacity to a single computer. 
 
 %\autocite{El-Rewini:2005:ACA:1044920}
 
-It is particularly interesting to evaluate horizontal scalability in IoT scenarios, especially when Erlang comes into play, since it is famous for its transparent distribution support. However, horizontal scalability heavily depends on application specific requirements, which makes it difficult to model and test generally. Therefore, for simplicity vertical scalability is primarily considered in this work. It is measured by observing how many concurrent requests a system can handle on average under increasing load, and how this behaviour changes when more resources are added to the underlying platform. 
+It is particularly interesting to evaluate horizontal scalability in IoT scenarios, especially when Erlang comes into play since it is famous for its transparent distribution support. However, horizontal scalability heavily depends on application-specific requirements, which makes it difficult to model and test generally. Therefore, for simplicity vertical scalability is primarily considered in this work. It is measured by observing how many concurrent requests a system can handle on average under increasing load, and how this behaviour changes when more resources are added to the underlying platform. 
 
-\item Reliability can refer to many aspects. In this work, availability is the principal concern. In general, availability is the proportion of time a system is in a functioning condition. It is measured qualitatively by observing whether a system remains available and behaves as expected when random faults occur within any of its sub-systems. This is sometimes also referred as fault-tolerance. Fault-tolerance and reliability are used interchangeably in this work.
+\item Reliability can refer to many aspects. In this work, availability is the principal concern. In general, availability is the proportion of time a system is in a functioning condition. It is measured qualitatively by observing whether a system remains available and behaves as expected when random faults occur within any of its sub-systems. This is sometimes also referred to as fault-tolerance. Fault-tolerance and reliability are used interchangeably in this work.
 
 \end{itemize}
 
 
 
-As a summary, in a client-server model, a scalable and reliable server means it should fully utilize modern multi-core systems, deliver stable performance facing large number of concurrent clients/requests and behave as expected when faults occur.
+As a summary, in a client-server model, a scalable and reliable server means it should fully utilize modern multi-core systems, deliver stable performance facing a large number of concurrent clients/requests and behave as expected when faults occur.
 
 %On the other hand, with Fog Computing paradigm in mind, the objective of the research can also be stated as building 
 

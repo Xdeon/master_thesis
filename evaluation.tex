@@ -383,7 +383,7 @@ However, some simple tests immediately reveal the limitation of this approach. I
 
 It is considered that without more complex business logic, it is of little benefit to scale the CoAP server out utilizing distributed Erlang. In such a case, using a load balancer directly is more efficient. Nonetheless, distributed Erlang can largely simplify application logic when the system does involve many different components. For instance, a real-world case might use the server in pair with mnesia \autocite{mnesia}, the Erlang's built-in database that can be configured to replicate its state over multiple nodes for scalability and reliability using nothing else but pure distributed Erlang. 
 
-Since CoAP is a relatively young protocol, clustering of CoAP services are still under research. Leshan \autocite{leshan} is an OMA Lightweight M2M (LWM2M) implementation in Java. It is built on top of the Californium framework. There is a demand for using Leshan servers in a cluster and it faces similar challenges as it uses CoAP underneath. The wiki page of the project \autocite{leshan_cluster} states information and concerns for CoAP clustering, which suggests that there is still much room for improvement in this area.
+CoAP is a relatively young protocol and clustering of CoAP services is still an area of active research. Leshan \autocite{leshan} is an OMA Lightweight M2M (LWM2M) implementation in Java. It is built on top of the Californium framework. There is a demand for using Leshan servers in a cluster and it faces similar challenges as it uses CoAP underneath. The wiki page of the project \autocite{leshan_cluster} states information and concerns for CoAP clustering, which suggests that there is still much room for improvement in this area.
 
 \section{Summary}
 
